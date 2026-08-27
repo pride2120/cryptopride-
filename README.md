@@ -24,3 +24,6 @@ Independent Robinhood Chain concentrated-liquidity analytics dashboard.
 Market data comes from GeckoTerminal's Robinhood network endpoints. The fee estimator currently uses a 0.30% analytical fee assumption; it does not claim to reproduce MaxFi's proprietary APR or every pool's exact DEX fee tier. Verify the exact target pool before depositing.
 
 Robinhood Chain is Ethereum-compatible and uses chain ID 4663. This project is independent and is not affiliated with MaxFi, Robinhood, Uniswap, or GeckoTerminal.
+
+## V2.1 deployment fix
+This build switches the Vercel API handlers to CommonJS for broad Node/Vercel compatibility, validates pool addresses, and adds a browser-side GeckoTerminal fallback if a serverless route is temporarily unavailable.

@@ -1,29 +1,26 @@
-# CryptoPride Range Lab V2
+# CryptoPride Range Lab V3
 
-Independent Robinhood Chain concentrated-liquidity analytics dashboard.
+V3 adds Robinhood Stock Token pool detection.
 
-## V2 features
-- Live Robinhood Chain pool scanner via GeckoTerminal
-- Perfect Range engine using recent hourly volatility
-- Aggressive / Sweet Spot / Conservative / Set & Forget modes
-- Historical in-range fit score
-- Confidence score using historical fit, liquidity and activity
-- Simplified modeled APR and fee estimator
-- Saved LP positions with SAFE / WATCH / NEAR EDGE / OUT OF RANGE status
-- $100 → $10,000 challenge tracker
-- Search and ranking controls
-- Zero package dependencies; deploy directly to Vercel
+## New in V3
+- Fetches Robinhood's canonical Stock Token registry from `https://api.robinhood.com/rhj/assets`.
+- Matches Chain ID 4663 Stock Token contract addresses against Robinhood Chain pools from GeckoTerminal.
+- Scans multiple GeckoTerminal pool pages (8 by default, configurable up to 10).
+- Adds **All Pools / Robinhood Stock Tokens** filtering.
+- Adds a STOCK TOKEN badge and ticker metadata in the pool directory.
+- Keeps the Perfect Range engine, saved LP positions, challenge tracker, and MaxFi referral button.
 
 ## Deploy
-1. Create a GitHub repo and upload this folder.
-2. In Vercel choose **Add New → Project**.
-3. Import the repo and deploy with the defaults.
-4. No environment variables are required for V2.
+Upload the contents of this folder to the root of your GitHub repository and let Vercel redeploy.
 
-## Data/model notes
-Market data comes from GeckoTerminal's Robinhood network endpoints. The fee estimator currently uses a 0.30% analytical fee assumption; it does not claim to reproduce MaxFi's proprietary APR or every pool's exact DEX fee tier. Verify the exact target pool before depositing.
+Required root structure:
+- `index.html`
+- `vercel.json`
+- `package.json`
+- `api/pools.js`
+- `api/ohlcv.js`
 
-Robinhood Chain is Ethereum-compatible and uses chain ID 4663. This project is independent and is not affiliated with MaxFi, Robinhood, Uniswap, or GeckoTerminal.
+After deployment, test `/api/pools?pages=8`. The response should include a `meta.stockPoolCount` value.
 
-## V2.1 deployment fix
-This build switches the Vercel API handlers to CommonJS for broad Node/Vercel compatibility, validates pool addresses, and adds a browser-side GeckoTerminal fallback if a serverless route is temporarily unavailable.
+## Notes
+Robinhood Stock Tokens are identified using Robinhood's canonical asset registry. Pool market data is sourced from GeckoTerminal. Because GeckoTerminal's public API is rate-limited and ranks network pools, this V3 scans the first 8 pages rather than issuing one API call per Stock Token. This makes the site much more practical on Vercel while still surfacing a broad set of Stock Token pools.

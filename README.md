@@ -1,26 +1,26 @@
-# CryptoPride Range Lab V4
+# CryptoPride Range Lab V5
 
-V4 adds a MaxFi-style total **Range Width %** selector and an original **Perfect Width** recommendation engine while retaining Robinhood Stock Token pool detection.
+V5 upgrades the APR model so the dashboard does not treat every pool as a fixed 0.30% fee pool.
 
-## New in V4
+## New in V5
 
-- 0–100% Range Width slider. `0` means Auto / Perfect Width.
-- `Use Perfect Width` button to apply the model recommendation.
-- Range width follows MaxFi's convention: a 10% total width is approximately ±5% around spot when centered.
-- Perfect Width uses recent hourly price history, current volatility and the selected risk mode to select a target total width.
-- Aggressive, Sweet Spot, Conservative and Set & Forget modes use different historical-fit targets.
-- Manual widths immediately recalculate range bounds, historical fit, modeled APR, fees and confidence.
-- Keeps Robinhood Stock Token filters, saved LP positions, challenge tracker and MaxFi referral button.
+- Adds an LP fee-tier selector: 0.01%, 0.05%, 0.30%, or 1.00%.
+- Attempts to detect a fee tier from pool metadata/name when it is available; otherwise the selected fee tier is used.
+- Separates **Base Pool APR** from **Range-Adjusted APR**.
+- Base Pool APR = `(24h volume × LP fee rate ÷ pool liquidity) × 365`.
+- Range-Adjusted APR = `Base Pool APR × concentration multiplier × historical in-range factor`.
+- Uses a width-based concentration curve calibrated so narrower ranges receive more capital-efficiency credit while wider ranges converge toward 1×.
+- Uses loaded hourly OHLCV candles for the historical in-range factor on the selected pool.
+- Shows the concentration multiplier and fit percentage directly under the Range-Adjusted APR.
+- Keeps Perfect Width, Robinhood Stock Token detection, saved positions, challenge tracker, and MaxFi referral link.
 
 ## Important
 
-The Perfect Width engine is CryptoPride's own analytics heuristic. It does not reproduce or claim to use MaxFi's proprietary optimization data. Actual LP performance can differ materially.
+This is an analytical estimate, not a quoted MaxFi APR. Pool volume, liquidity, routing, fee share, tick-level liquidity distribution, price movement, impermanent loss, and future activity can materially change realized returns. Verify the exact fee tier on MaxFi before depositing and select that tier in CryptoPride Range Lab if it is not detected automatically.
 
 ## Deploy
 
-Upload the **contents** of this folder to the root of the GitHub repository connected to Vercel.
-
-Required structure:
+Keep this repository structure:
 
 - `index.html`
 - `vercel.json`
@@ -28,4 +28,4 @@ Required structure:
 - `api/pools.js`
 - `api/ohlcv.js`
 
-After deployment, verify `/api/pools?pages=8` returns JSON, then open the homepage.
+Upload the contents of this folder to the root of the GitHub repository connected to Vercel.

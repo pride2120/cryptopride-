@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.5' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.6' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -98,7 +98,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.5'
+          'user-agent': 'CryptoPride-Range-Lab/5.6'
         }
       });
       if (!response.ok) {
@@ -224,6 +224,26 @@ module.exports = async function handler(req, res) {
       referencePrice.set(symbol, median);
     }
 
+    // Pick a correctly oriented, liquid reference pool for historical candles for each
+    // volatile token. This is important for reversed pools such as USDG / WETH, where
+    // GeckoTerminal can return quote-side OHLCV on the stablecoin scale even though the
+    // focus asset is WETH. We use this reference only for price history / fit, never for
+    // the selected pool's volume, liquidity, or fee tier.
+    const historyReference = new Map();
+    for (const pool of preliminary) {
+      const a = pool.attributes || {};
+      const base = normSymbol(a.debug_base_symbol);
+      const quote = normSymbol(a.debug_quote_symbol);
+      const basePrice = goodPrice(a.debug_base_price_usd);
+      const liq = Number(a.reserve_in_usd || 0);
+      const address = extractAddress(pool.id) || extractAddress(a.address);
+      if (!address || !base || isStableSymbol(base) || !isStableSymbol(quote) || basePrice <= 1.5) continue;
+      const prev = historyReference.get(base);
+      if (!prev || liq > prev.liquidity) {
+        historyReference.set(base, { address, side: 'base', liquidity: liq, price: basePrice, name: a.name || '' });
+      }
+    }
+
     const tagged = preliminary.map(pool => {
       const a = pool.attributes || {};
       const focusSymbol = normSymbol(a.focus_token_symbol);
@@ -247,6 +267,10 @@ module.exports = async function handler(req, res) {
         displayName = `${focusSymbol} / ${stable}${feeMatch ? ' ' + feeMatch[1] + '%' : ''}`;
       }
 
+      const histRef = historyReference.get(focusSymbol) || null;
+      const ownAddress = extractAddress(pool.id) || extractAddress(a.address);
+      const useHistoryReference = Boolean(isReversedStablePair && histRef && histRef.address !== ownAddress);
+
       return {
         ...pool,
         attributes: {
@@ -254,7 +278,11 @@ module.exports = async function handler(req, res) {
           focus_token_price_usd: focusPrice,
           reference_token_price_usd: ref || null,
           display_name: displayName,
-          focus_orientation_source: isReversedStablePair && ref > 0 ? 'cross-pool-reference' : a.focus_orientation_source
+          focus_orientation_source: isReversedStablePair && ref > 0 ? 'cross-pool-reference' : a.focus_orientation_source,
+          history_pool_address: useHistoryReference ? histRef.address : ownAddress,
+          history_token_side: useHistoryReference ? histRef.side : a.focus_token_side,
+          history_reference_symbol: useHistoryReference ? focusSymbol : null,
+          history_reference_name: useHistoryReference ? histRef.name : null
         }
       };
     });

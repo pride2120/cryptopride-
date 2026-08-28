@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/3.0' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.1' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/3.0'
+          'user-agent': 'CryptoPride-Range-Lab/5.1'
         }
       });
       if (!response.ok) {
@@ -69,13 +69,30 @@ module.exports = async function handler(req, res) {
       const baseStock = stockByAddress.get(baseAddress);
       const quoteStock = stockByAddress.get(quoteAddress);
       const stockAssets = [baseStock, quoteStock].filter(Boolean);
+      const focusStock = baseStock || quoteStock || null;
+      const focusSide = baseStock ? 'base' : quoteStock ? 'quote' : 'base';
+      const pa = pool.attributes || {};
+      const basePrice = Number(pa.base_token_price_usd || 0);
+      const quotePrice = Number(pa.quote_token_price_usd || 0);
+      const rawChange = Number(pa.price_change_percentage?.h24 || 0);
+      // For Stock Token pools, always center analytics on the stock token itself.
+      // GeckoTerminal's pool OHLCV defaults to the base token, so we preserve
+      // whether the stock is base or quote and request matching candles later.
+      const focusPrice = focusSide === 'quote' ? quotePrice : basePrice;
+      const focusChange = focusSide === 'quote' ? -rawChange : rawChange;
       return {
         ...pool,
         attributes: {
-          ...(pool.attributes || {}),
+          ...pa,
           is_stock_pool: stockAssets.length > 0,
           stock_symbols: stockAssets.map(x => x.symbol),
-          stock_token_names: stockAssets.map(x => x.name)
+          stock_token_names: stockAssets.map(x => x.name),
+          focus_token_side: focusSide,
+          focus_token_symbol: focusStock?.symbol || '',
+          focus_token_name: focusStock?.name || '',
+          focus_token_address: focusSide === 'quote' ? quoteAddress : baseAddress,
+          focus_token_price_usd: Number.isFinite(focusPrice) && focusPrice > 0 ? focusPrice : basePrice,
+          focus_price_change_percentage_h24: Number.isFinite(focusChange) ? focusChange : rawChange
         }
       };
     });

@@ -1,3 +1,7 @@
+# CryptoPride Range Lab V5.1
+
+Fixes Stock Token pool orientation so range calculations use the Stock Token price even when it is the quote token in GeckoTerminal. OHLCV requests now explicitly use `token=base` or `token=quote` to match the analyzed asset.
+
 # CryptoPride Range Lab V5
 
 V5 upgrades the APR model so the dashboard does not treat every pool as a fixed 0.30% fee pool.

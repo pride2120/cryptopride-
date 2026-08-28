@@ -33,3 +33,8 @@ V5.6 builds a cross-pool reference-price map. If a pool is returned as USDG/WETH
 
 ## V5.6 history fix
 Reversed stable/volatile pools such as USDG/WETH now use a correctly oriented WETH/USDG reference pool for historical price candles. The selected pool still supplies its own 24h volume, liquidity, and LP fee tier for Base Pool APR. This prevents a $1 stablecoin OHLCV series from forcing historical fit, range-adjusted APR, and estimated fees to zero.
+
+
+## V5.7 rolling historical fit
+
+V5.7 replaces the old absolute-price historical-fit calculation with a rolling stay-in-range backtest. For each historical starting hour, CryptoPride anchors a hypothetical range at that hour's price and asks whether price remained inside the same total width for the selected horizon. Perfect Width uses the percentile of those required historical widths, and Range-Adjusted APR uses the resulting rolling fit percentage. This avoids incorrectly reporting 0% fit simply because the asset trended to a new price level.

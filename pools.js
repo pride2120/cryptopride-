@@ -292,7 +292,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       data: tagged,
       meta: {
-        version: '5.5',
+        version: '5.7',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

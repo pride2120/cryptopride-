@@ -1,40 +1,29 @@
-# CryptoPride Range Lab V5.3
+# CryptoPride Range Lab V6
 
-V5.3 fixes pricing orientation for both Robinhood Stock Token pools and stablecoin/volatile-asset pools.
+V6 adds a pool-specific width optimizer designed to behave more like a concentrated-liquidity strategy engine instead of a pure volatility calculator.
 
-## Key fix
+## New in V6
 
-- Robinhood Stock Token pairs range around the Stock Token.
-- Stablecoin pairs such as `USDG/WETH`, `USDC/WETH`, and `USDG/AVAX` range around the non-stable asset instead of the ~$1 stablecoin.
-- OHLCV history requests use the same base/quote side selected for live pricing.
-- Range, Perfect Width, historical fit, and Range-Adjusted APR are therefore calculated on the intended asset.
+- Reads `tickSpacing()` and `fee()` directly from Robinhood Chain RPC when the selected pool exposes a Uniswap-V3-compatible interface.
+- Snaps recommended and manual widths to valid tick-spacing increments.
+- Optimizes candidate widths inside strategy-specific bands using rolling historical stay-in-range, modeled fee capture, concentration, a same-pair fee-efficiency competition proxy, and rebalance-delay burden.
+- Adds a rebalance-delay control (0–48h).
+- Adds a manual “MaxFi width shown” field for side-by-side comparison with CryptoPride’s independent optimized width.
+- Preserves V5.7 reversed-pair pricing/history fixes, Robinhood Stock Token detection, APR engine, positions, and challenge tracker.
+
+## Important limitation
+
+V6 does **not** claim to reproduce MaxFi’s proprietary optimizer. MaxFi says its presets use on-chain liquidity distribution and historical pool data. V6 reads tick spacing on-chain, but exact tick-by-tick competing liquidity still requires an indexer or a more expensive tick scan. The current competition input is a transparent proxy based on same-pair volume/liquidity efficiency across the pools loaded by the app.
 
 ## Deploy
 
-Upload these files to the root of the GitHub repository connected to Vercel:
+Keep this structure at the GitHub repo root:
 
-```text
-README.md
-api/
-  pools.js
-  ohlcv.js
-index.html
-package.json
-vercel.json
-```
+- `index.html`
+- `vercel.json`
+- `package.json`
+- `api/pools.js`
+- `api/ohlcv.js`
+- `api/pool-state.js`
 
-After deployment, test `/api/pools?pages=8` and search for `USDG / WETH`. The pool should show `focus_token_symbol` as `WETH`, `focus_token_side` as `quote` when USDG is the base token, and `focus_orientation_source` as `non-stable-side`.
-
-
-## V5.6 reversed-pair fix
-
-V5.6 builds a cross-pool reference-price map. If a pool is returned as USDG/WETH and GeckoTerminal does not expose a usable quote-token USD price, CryptoPride uses the median WETH USD price observed in the other Robinhood pools from the same scan. Reversed stable/volatile pool labels are normalized to volatile/stable order for clarity.
-
-
-## V5.6 history fix
-Reversed stable/volatile pools such as USDG/WETH now use a correctly oriented WETH/USDG reference pool for historical price candles. The selected pool still supplies its own 24h volume, liquidity, and LP fee tier for Base Pool APR. This prevents a $1 stablecoin OHLCV series from forcing historical fit, range-adjusted APR, and estimated fees to zero.
-
-
-## V5.7 rolling historical fit
-
-V5.7 replaces the old absolute-price historical-fit calculation with a rolling stay-in-range backtest. For each historical starting hour, CryptoPride anchors a hypothetical range at that hour's price and asks whether price remained inside the same total width for the selected horizon. Perfect Width uses the percentile of those required historical widths, and Range-Adjusted APR uses the resulting rolling fit percentage. This avoids incorrectly reporting 0% fit simply because the asset trended to a new price level.
+Commit to the repository connected to Vercel. Vercel should redeploy automatically.

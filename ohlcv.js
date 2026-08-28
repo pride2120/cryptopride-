@@ -22,7 +22,7 @@ module.exports = async function handler(req, res) {
     const response = await fetch(url, {
       headers: {
         accept: 'application/json',
-        'user-agent': 'CryptoPride-Range-Lab/5.3'
+        'user-agent': 'CryptoPride-Range-Lab/6.0'
       }
     });
 

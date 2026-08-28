@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.6' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/6.0' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -98,7 +98,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.6'
+          'user-agent': 'CryptoPride-Range-Lab/6.0'
         }
       });
       if (!response.ok) {
@@ -292,7 +292,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       data: tagged,
       meta: {
-        version: '5.7',
+        version: '6.0',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

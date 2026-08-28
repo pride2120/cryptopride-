@@ -10,6 +10,15 @@ function normSymbol(v) {
   return String(v || '').trim().toUpperCase();
 }
 
+function pairSymbolsFromName(name) {
+  const pairPart = String(name || '').split(/\s+on\s+/i)[0];
+  const raw = pairPart.split('/').slice(0, 2);
+  return raw.map(part => {
+    const m = String(part || '').trim().match(/^([A-Za-z0-9._-]+)/);
+    return normSymbol(m ? m[1] : '');
+  });
+}
+
 const STABLE_SYMBOLS = new Set([
   'USDG', 'USDC', 'USDT', 'DAI', 'USDS', 'FDUSD', 'TUSD', 'USDE', 'PYUSD', 'USD1'
 ]);
@@ -57,7 +66,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.3' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.4' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -89,7 +98,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.3'
+          'user-agent': 'CryptoPride-Range-Lab/5.4'
         }
       });
       if (!response.ok) {
@@ -113,8 +122,9 @@ module.exports = async function handler(req, res) {
 
       const baseAddress = extractAddress(baseId) || extractAddress(baseInc.address);
       const quoteAddress = extractAddress(quoteId) || extractAddress(quoteInc.address);
-      const baseSymbol = normSymbol(baseInc.symbol || baseInc.name?.split(' ')[0]);
-      const quoteSymbol = normSymbol(quoteInc.symbol || quoteInc.name?.split(' ')[0]);
+      const nameSymbols = pairSymbolsFromName(pa.name);
+      const baseSymbol = normSymbol(baseInc.symbol || baseInc.name?.split(' ')[0] || nameSymbols[0]);
+      const quoteSymbol = normSymbol(quoteInc.symbol || quoteInc.name?.split(' ')[0] || nameSymbols[1]);
 
       // Primary match: canonical Robinhood contract address.
       // Fallback: canonical Robinhood ticker. This catches pool feeds where token
@@ -125,9 +135,7 @@ module.exports = async function handler(req, res) {
 
       // Final fallback: inspect GeckoTerminal's pool display name, e.g. "USDG / MU".
       if (!baseStock && !quoteStock) {
-        const name = String(pa.name || '');
-        const pairPart = name.split(/\s+on\s+/i)[0];
-        const pairSymbols = pairPart.split('/').slice(0, 2).map(x => normSymbol(x.replace(/[^A-Za-z0-9._-].*$/, '')));
+        const pairSymbols = pairSymbolsFromName(pa.name);
         if (pairSymbols[0] && stockBySymbol.has(pairSymbols[0])) baseStock = stockBySymbol.get(pairSymbols[0]);
         if (pairSymbols[1] && stockBySymbol.has(pairSymbols[1])) quoteStock = stockBySymbol.get(pairSymbols[1]);
         if (baseStock || quoteStock) orientationSource = 'pair-name';
@@ -183,7 +191,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       data: tagged,
       meta: {
-        version: '5.3',
+        version: '5.4',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

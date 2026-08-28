@@ -10,6 +10,14 @@ function normSymbol(v) {
   return String(v || '').trim().toUpperCase();
 }
 
+const STABLE_SYMBOLS = new Set([
+  'USDG', 'USDC', 'USDT', 'DAI', 'USDS', 'FDUSD', 'TUSD', 'USDE', 'PYUSD', 'USD1'
+]);
+
+function isStableSymbol(symbol) {
+  return STABLE_SYMBOLS.has(normSymbol(symbol));
+}
+
 function includedToken(map, id) {
   const obj = map.get(id) || {};
   return obj.attributes || {};
@@ -49,7 +57,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.2' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.3' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -81,7 +89,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.2'
+          'user-agent': 'CryptoPride-Range-Lab/5.3'
         }
       });
       if (!response.ok) {
@@ -127,7 +135,21 @@ module.exports = async function handler(req, res) {
 
       const stockAssets = [baseStock, quoteStock].filter(Boolean);
       const focusStock = baseStock || quoteStock || null;
-      const focusSide = baseStock ? 'base' : quoteStock ? 'quote' : 'base';
+
+      // Choose the asset users actually want to range around:
+      // 1) Robinhood Stock Token if present.
+      // 2) For stable/volatile pairs (USDG/WETH, USDC/WETH, etc.), choose the non-stable asset.
+      // 3) Otherwise retain GeckoTerminal base-token orientation.
+      const baseStable = isStableSymbol(baseSymbol);
+      const quoteStable = isStableSymbol(quoteSymbol);
+      let focusSide = baseStock ? 'base' : quoteStock ? 'quote' : 'base';
+      let focusReason = focusStock ? 'stock-token' : 'base-default';
+      if (!focusStock && baseStable !== quoteStable) {
+        focusSide = baseStable ? 'quote' : 'base';
+        focusReason = 'non-stable-side';
+      }
+
+      const focusSymbol = focusSide === 'quote' ? quoteSymbol : baseSymbol;
       const basePrice = goodPrice(pa.base_token_price_usd);
       const derivedFocus = deriveFocusPrice(pa, focusSide);
       const focusPrice = derivedFocus || basePrice;
@@ -142,12 +164,12 @@ module.exports = async function handler(req, res) {
           stock_symbols: stockAssets.map(x => x.symbol),
           stock_token_names: stockAssets.map(x => x.name),
           focus_token_side: focusSide,
-          focus_token_symbol: focusStock?.symbol || baseSymbol || '',
-          focus_token_name: focusStock?.name || '',
+          focus_token_symbol: focusStock?.symbol || focusSymbol || '',
+          focus_token_name: focusStock?.name || (focusSide === 'quote' ? quoteInc.name || '' : baseInc.name || ''),
           focus_token_address: focusSide === 'quote' ? quoteAddress : baseAddress,
           focus_token_price_usd: focusPrice,
           focus_price_change_percentage_h24: Number.isFinite(focusChange) ? focusChange : rawChange,
-          focus_orientation_source: orientationSource,
+          focus_orientation_source: focusStock ? orientationSource : focusReason,
           debug_base_symbol: baseSymbol,
           debug_quote_symbol: quoteSymbol,
           debug_base_price_usd: basePrice,
@@ -161,7 +183,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       data: tagged,
       meta: {
-        version: '5.2',
+        version: '5.3',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

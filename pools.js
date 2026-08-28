@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.4' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.5' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
@@ -98,7 +98,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.4'
+          'user-agent': 'CryptoPride-Range-Lab/5.5'
         }
       });
       if (!response.ok) {
@@ -113,7 +113,7 @@ module.exports = async function handler(req, res) {
       if (pagePools.length < 20) break;
     }
 
-    const tagged = allPools.map(pool => {
+    const preliminary = allPools.map(pool => {
       const pa = pool.attributes || {};
       const baseId = pool?.relationships?.base_token?.data?.id || '';
       const quoteId = pool?.relationships?.quote_token?.data?.id || '';
@@ -186,12 +186,85 @@ module.exports = async function handler(req, res) {
       };
     });
 
+
+    // Build a cross-pool USD reference-price map. GeckoTerminal sometimes returns
+    // reversed stable/volatile pools (for example USDG / WETH) without a usable
+    // quote-token USD price. Other pools for the same volatile token are usually
+    // correctly oriented (WETH / USDG), so use their reliable USD price as a
+    // network reference rather than falling back to the $1 stablecoin side.
+    const priceSamples = new Map();
+    function addSample(symbol, price) {
+      symbol = normSymbol(symbol);
+      price = goodPrice(price);
+      if (!symbol || isStableSymbol(symbol) || !price) return;
+      if (!priceSamples.has(symbol)) priceSamples.set(symbol, []);
+      priceSamples.get(symbol).push(price);
+    }
+    for (const pool of preliminary) {
+      const a = pool.attributes || {};
+      const b = normSymbol(a.debug_base_symbol);
+      const q = normSymbol(a.debug_quote_symbol);
+      const bp = goodPrice(a.debug_base_price_usd);
+      const qp = goodPrice(a.debug_quote_price_usd);
+      // Base-token USD prices are the most consistently populated field.
+      if (!isStableSymbol(b) && bp > 0) addSample(b, bp);
+      if (!isStableSymbol(q) && qp > 0) addSample(q, qp);
+      // Stock-token focus prices are also trustworthy when materially above a stable price.
+      const fp = goodPrice(a.focus_token_price_usd);
+      if (a.focus_token_symbol && !isStableSymbol(a.focus_token_symbol) && fp > 1.5) {
+        addSample(a.focus_token_symbol, fp);
+      }
+    }
+    const referencePrice = new Map();
+    for (const [symbol, values] of priceSamples) {
+      const clean = values.filter(v => Number.isFinite(v) && v > 0).sort((a,b)=>a-b);
+      if (!clean.length) continue;
+      const mid = Math.floor(clean.length / 2);
+      const median = clean.length % 2 ? clean[mid] : (clean[mid-1] + clean[mid]) / 2;
+      referencePrice.set(symbol, median);
+    }
+
+    const tagged = preliminary.map(pool => {
+      const a = pool.attributes || {};
+      const focusSymbol = normSymbol(a.focus_token_symbol);
+      let focusPrice = goodPrice(a.focus_token_price_usd);
+      const ref = referencePrice.get(focusSymbol) || 0;
+      const baseStable = isStableSymbol(a.debug_base_symbol);
+      const quoteStable = isStableSymbol(a.debug_quote_symbol);
+      const isReversedStablePair = baseStable && !quoteStable && a.focus_token_side === 'quote';
+
+      // Hard correction: never let a volatile quote token inherit a ~$1 stablecoin price.
+      // If GeckoTerminal cannot derive the quote-token USD price, use the median price
+      // observed for that same token across the other Robinhood pools in this scan.
+      if (isReversedStablePair && ref > 0 && (focusPrice <= 1.5 || Math.abs(focusPrice - 1) < 0.25)) {
+        focusPrice = ref;
+      }
+
+      const feeMatch = String(a.name || '').match(/(0\.01|0\.02|0\.046|0\.05|0\.3|0\.30|1(?:\.0+)?)%/i);
+      let displayName = a.name || '';
+      if (isReversedStablePair && focusSymbol) {
+        const stable = normSymbol(a.debug_base_symbol);
+        displayName = `${focusSymbol} / ${stable}${feeMatch ? ' ' + feeMatch[1] + '%' : ''}`;
+      }
+
+      return {
+        ...pool,
+        attributes: {
+          ...a,
+          focus_token_price_usd: focusPrice,
+          reference_token_price_usd: ref || null,
+          display_name: displayName,
+          focus_orientation_source: isReversedStablePair && ref > 0 ? 'cross-pool-reference' : a.focus_orientation_source
+        }
+      };
+    });
+
     const stockPoolCount = tagged.filter(p => p.attributes?.is_stock_pool).length;
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
     return res.status(200).json({
       data: tagged,
       meta: {
-        version: '5.4',
+        version: '5.5',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

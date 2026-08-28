@@ -6,6 +6,39 @@ function extractAddress(value) {
   return m ? m[0].toLowerCase() : '';
 }
 
+function normSymbol(v) {
+  return String(v || '').trim().toUpperCase();
+}
+
+function includedToken(map, id) {
+  const obj = map.get(id) || {};
+  return obj.attributes || {};
+}
+
+function goodPrice(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function deriveFocusPrice(pa, side) {
+  const baseUsd = goodPrice(pa.base_token_price_usd);
+  const quoteUsd = goodPrice(pa.quote_token_price_usd);
+  const baseInQuote = goodPrice(pa.base_token_price_quote_token);
+  const quoteInBase = goodPrice(pa.quote_token_price_base_token);
+
+  if (side === 'base') {
+    if (baseUsd) return baseUsd;
+    if (quoteUsd && baseInQuote) return quoteUsd * baseInQuote;
+    if (quoteUsd && quoteInBase) return quoteUsd / quoteInBase;
+    return 0;
+  }
+
+  if (quoteUsd) return quoteUsd;
+  if (baseUsd && quoteInBase) return baseUsd * quoteInBase;
+  if (baseUsd && baseInQuote) return baseUsd / baseInQuote;
+  return 0;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -16,25 +49,27 @@ module.exports = async function handler(req, res) {
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.1' }
+      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/5.2' }
     });
     if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
     const assetsJson = await assetsResp.json();
     const assets = Array.isArray(assetsJson.assets) ? assetsJson.assets : [];
 
     const stockByAddress = new Map();
+    const stockBySymbol = new Map();
     for (const asset of assets) {
       if (asset.status && asset.status !== 'ASSET_STATUS_ACTIVE') continue;
+      const stock = {
+        symbol: normSymbol(asset.tokenSymbol),
+        name: asset.tokenName || '',
+        logoUrl: asset.logoUrl || '',
+        multiplier: asset.currentMultiplier || '1'
+      };
+      if (stock.symbol) stockBySymbol.set(stock.symbol, stock);
       for (const dep of asset.deployments || []) {
         if (Number(dep.chainId) !== 4663) continue;
         const address = String(dep.contractAddress || '').toLowerCase();
-        if (!address) continue;
-        stockByAddress.set(address, {
-          symbol: asset.tokenSymbol,
-          name: asset.tokenName,
-          logoUrl: asset.logoUrl || '',
-          multiplier: asset.currentMultiplier || '1'
-        });
+        if (address) stockByAddress.set(address, stock);
       }
     }
 
@@ -46,7 +81,7 @@ module.exports = async function handler(req, res) {
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',
-          'user-agent': 'CryptoPride-Range-Lab/5.1'
+          'user-agent': 'CryptoPride-Range-Lab/5.2'
         }
       });
       if (!response.ok) {
@@ -62,24 +97,43 @@ module.exports = async function handler(req, res) {
     }
 
     const tagged = allPools.map(pool => {
+      const pa = pool.attributes || {};
       const baseId = pool?.relationships?.base_token?.data?.id || '';
       const quoteId = pool?.relationships?.quote_token?.data?.id || '';
-      const baseAddress = extractAddress(baseId) || extractAddress(includedById.get(baseId)?.attributes?.address);
-      const quoteAddress = extractAddress(quoteId) || extractAddress(includedById.get(quoteId)?.attributes?.address);
-      const baseStock = stockByAddress.get(baseAddress);
-      const quoteStock = stockByAddress.get(quoteAddress);
+      const baseInc = includedToken(includedById, baseId);
+      const quoteInc = includedToken(includedById, quoteId);
+
+      const baseAddress = extractAddress(baseId) || extractAddress(baseInc.address);
+      const quoteAddress = extractAddress(quoteId) || extractAddress(quoteInc.address);
+      const baseSymbol = normSymbol(baseInc.symbol || baseInc.name?.split(' ')[0]);
+      const quoteSymbol = normSymbol(quoteInc.symbol || quoteInc.name?.split(' ')[0]);
+
+      // Primary match: canonical Robinhood contract address.
+      // Fallback: canonical Robinhood ticker. This catches pool feeds where token
+      // relationship/address metadata is incomplete or represented differently.
+      let baseStock = stockByAddress.get(baseAddress) || stockBySymbol.get(baseSymbol) || null;
+      let quoteStock = stockByAddress.get(quoteAddress) || stockBySymbol.get(quoteSymbol) || null;
+      let orientationSource = baseStock || quoteStock ? (stockByAddress.has(baseAddress) || stockByAddress.has(quoteAddress) ? 'address' : 'symbol') : 'none';
+
+      // Final fallback: inspect GeckoTerminal's pool display name, e.g. "USDG / MU".
+      if (!baseStock && !quoteStock) {
+        const name = String(pa.name || '');
+        const pairPart = name.split(/\s+on\s+/i)[0];
+        const pairSymbols = pairPart.split('/').slice(0, 2).map(x => normSymbol(x.replace(/[^A-Za-z0-9._-].*$/, '')));
+        if (pairSymbols[0] && stockBySymbol.has(pairSymbols[0])) baseStock = stockBySymbol.get(pairSymbols[0]);
+        if (pairSymbols[1] && stockBySymbol.has(pairSymbols[1])) quoteStock = stockBySymbol.get(pairSymbols[1]);
+        if (baseStock || quoteStock) orientationSource = 'pair-name';
+      }
+
       const stockAssets = [baseStock, quoteStock].filter(Boolean);
       const focusStock = baseStock || quoteStock || null;
       const focusSide = baseStock ? 'base' : quoteStock ? 'quote' : 'base';
-      const pa = pool.attributes || {};
-      const basePrice = Number(pa.base_token_price_usd || 0);
-      const quotePrice = Number(pa.quote_token_price_usd || 0);
+      const basePrice = goodPrice(pa.base_token_price_usd);
+      const derivedFocus = deriveFocusPrice(pa, focusSide);
+      const focusPrice = derivedFocus || basePrice;
       const rawChange = Number(pa.price_change_percentage?.h24 || 0);
-      // For Stock Token pools, always center analytics on the stock token itself.
-      // GeckoTerminal's pool OHLCV defaults to the base token, so we preserve
-      // whether the stock is base or quote and request matching candles later.
-      const focusPrice = focusSide === 'quote' ? quotePrice : basePrice;
       const focusChange = focusSide === 'quote' ? -rawChange : rawChange;
+
       return {
         ...pool,
         attributes: {
@@ -88,11 +142,16 @@ module.exports = async function handler(req, res) {
           stock_symbols: stockAssets.map(x => x.symbol),
           stock_token_names: stockAssets.map(x => x.name),
           focus_token_side: focusSide,
-          focus_token_symbol: focusStock?.symbol || '',
+          focus_token_symbol: focusStock?.symbol || baseSymbol || '',
           focus_token_name: focusStock?.name || '',
           focus_token_address: focusSide === 'quote' ? quoteAddress : baseAddress,
-          focus_token_price_usd: Number.isFinite(focusPrice) && focusPrice > 0 ? focusPrice : basePrice,
-          focus_price_change_percentage_h24: Number.isFinite(focusChange) ? focusChange : rawChange
+          focus_token_price_usd: focusPrice,
+          focus_price_change_percentage_h24: Number.isFinite(focusChange) ? focusChange : rawChange,
+          focus_orientation_source: orientationSource,
+          debug_base_symbol: baseSymbol,
+          debug_quote_symbol: quoteSymbol,
+          debug_base_price_usd: basePrice,
+          debug_quote_price_usd: goodPrice(pa.quote_token_price_usd)
         }
       };
     });
@@ -102,6 +161,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       data: tagged,
       meta: {
+        version: '5.2',
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,

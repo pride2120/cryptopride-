@@ -260,7 +260,7 @@ async function selectPool(id){
     }
     candles=loaded;
     $('dataStatus').textContent=a.history_reference_symbol?`Live · ${a.history_reference_symbol} history`:'Live';
-  }catch(e){candles=[];$('dataStatus').textContent='Live · no valid history';}
+  }catch(e){candles=[];$('dataStatus').textContent=`History error · ${e.message}`;console.error('OHLCV history error:',e);}
   renderCalc();
 }
 function saved(){try{return JSON.parse(localStorage.getItem('lpr_positions')||'[]')}catch{return[]}}

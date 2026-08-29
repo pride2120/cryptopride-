@@ -164,8 +164,11 @@ function recommendationText(score,fit,r,ch){const floor=minimumFitFloor();let ms
   const a=attrs(selected);
   const price=poolPrice(selected);
   const vol24=num(a.volume_usd?.h24);
-  const vol7=sevenDayAvgDailyVolume();
-  const vol=vol7||vol24;
+const selectedAddress=poolAddress(selected).toLowerCase();
+const historyAddress=String(a.history_pool_address||selectedAddress).toLowerCase();
+const usesReferenceHistory=!!selectedAddress&&!!historyAddress&&historyAddress!==selectedAddress;
+const vol7=usesReferenceHistory?null:sevenDayAvgDailyVolume();
+const vol=vol7||vol24;
   const liq=num(a.reserve_in_usd);
   const ch=poolChange(selected);
 

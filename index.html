@@ -248,19 +248,19 @@ async function selectPool(id){
     $('dataStatus').textContent='Loading history';
     const a=attrs(selected),address=a.history_pool_address||poolAddress(selected);
     if(!address)throw new Error('Pool address unavailable');
-    let tokenSide=a.history_token_side||poolFocusSide(selected);
-const focusSymbol=poolFocusSymbol(selected);
+    const focusSymbol=poolFocusSymbol(selected);
 const baseSymbol=String(a.base_token_symbol||'').toUpperCase();
 const quoteSymbol=String(a.quote_token_symbol||'').toUpperCase();
-const historyTokenAddress=
+
+let tokenSide=
   focusSymbol===baseSymbol
-    ? a.base_token_address
+    ? 'base'
     : focusSymbol===quoteSymbol
-      ? a.quote_token_address
-      : '';
+      ? 'quote'
+      : a.history_token_side||poolFocusSide(selected);
 async function loadHistory(side){
-  const remote=`https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${address}/ohlcv/hour?aggregate=1&limit=336&currency=usd&token=${historyTokenAddress||side}`;
-const j=await fetchJson(`/api/ohlcv?pool=${address}&timeframe=hour&limit=336&token=${historyTokenAddress||side}`,remote);
+  const remote=`https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${address}/ohlcv/hour?aggregate=1&limit=336&currency=usd&token=${side}`;
+const j=await fetchJson(`/api/ohlcv?pool=${address}&timeframe=hour&limit=336&token=${side}`,remote);
   return j?.data?.attributes?.ohlcv_list||[];
 }
 

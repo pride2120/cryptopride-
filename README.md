@@ -1,4 +1,4 @@
-# CryptoPride Range Lab V6
+# CryptoPride Range Lab V6.1
 
 V6 adds a pool-specific width optimizer designed to behave more like a concentrated-liquidity strategy engine instead of a pure volatility calculator.
 
@@ -27,3 +27,11 @@ Keep this structure at the GitHub repo root:
 - `api/pool-state.js`
 
 Commit to the repository connected to Vercel. Vercel should redeploy automatically.
+
+
+## V6.1 fit guardrails
+- Aggressive minimum rolling fit: 40%
+- Sweet Spot minimum rolling fit: 65%
+- Conservative minimum rolling fit: 80%
+- Set & Forget minimum rolling fit: 90%
+- If no width inside the normal strategy band reaches the floor, the optimizer widens the range (up to 100%) and flags the guardrail override in the UI.

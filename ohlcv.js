@@ -9,7 +9,12 @@ module.exports = async function handler(req, res) {
   const timeframe = ['minute', 'hour', 'day'].includes(requestedTimeframe) ? requestedTimeframe : 'hour';
   const rawLimit = Number((req.query && req.query.limit) || 168);
   const requestedToken = String((req.query && req.query.token) || 'base').toLowerCase();
-  const token = requestedToken === 'quote' ? 'quote' : 'base';
+const token =
+  requestedToken === 'base' ||
+  requestedToken === 'quote' ||
+  /^0x[a-f0-9]{40}$/.test(requestedToken)
+    ? requestedToken
+    : 'base';
   const limit = Math.max(24, Math.min(Number.isFinite(rawLimit) ? rawLimit : 168, 1000));
 
   if (!/^0x[a-fA-F0-9]{40}$/.test(pool)) {

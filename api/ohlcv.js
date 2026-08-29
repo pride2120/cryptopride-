@@ -8,14 +8,20 @@ module.exports = async function handler(req, res) {
   const requestedTimeframe = String((req.query && req.query.timeframe) || 'hour');
   const timeframe = ['minute', 'hour', 'day'].includes(requestedTimeframe) ? requestedTimeframe : 'hour';
   const rawLimit = Number((req.query && req.query.limit) || 168);
+  const requestedToken = String((req.query && req.query.token) || 'base').toLowerCase();
+const token =
+  requestedToken === 'base' ||
+  requestedToken === 'quote' ||
+  /^0x[a-f0-9]{40}$/.test(requestedToken)
+    ? requestedToken
+    : 'base';
   const limit = Math.max(24, Math.min(Number.isFinite(rawLimit) ? rawLimit : 168, 1000));
 
   if (!/^0x[a-fA-F0-9]{40}$/.test(pool)) {
     return res.status(400).json({ error: 'Invalid pool address' });
   }
 
-  const url = `https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${pool}/ohlcv/${timeframe}?aggregate=1&limit=${limit}&currency=usd`;
-
+  const url = `https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${pool}/ohlcv/${timeframe}?aggregate=1&limit=${limit}&currency=usd&token=${token}`;
   try {
     const response = await fetch(url, {
       headers: {

@@ -256,7 +256,7 @@ async function selectPool(id){
     if(loaded.length&&focusPrice>0){
       const mids=loaded.map(c=>num(c?.[4])).filter(x=>x>0).sort((x,y)=>x-y);
       const med=mids.length?mids[Math.floor(mids.length/2)]:0;
-      if(med>0&&(med/focusPrice>4||focusPrice/med>4))throw new Error(`History scale mismatch: ${med} vs ${focusPrice}`);
+      if(med>0&&(med/focusPrice>20||focusPrice/med>20))throw new Error(`History scale mismatch: ${med} vs ${focusPrice}`);
     }
     candles=loaded;
     $('dataStatus').textContent=a.history_reference_symbol?`Live · ${a.history_reference_symbol} history`:'Live';

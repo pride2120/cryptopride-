@@ -14,7 +14,273 @@
 <div class="metrics"><div class="metric"><small>Current price</small><strong id="spot">—</strong><span id="change"></span></div><div class="metric"><small id="fitLabel">Historical stay-in-range</small><strong id="fit">—</strong><div class="riskbar"><div class="riskfill" id="fitBar"></div></div></div><div class="metric"><small>Base pool APR*</small><strong id="baseApr">—</strong><span id="feeTier">fee tier —</span></div><div class="metric"><small>Range-adjusted APR*</small><strong id="apr">—</strong><span id="aprBreakdown">width × fit</span></div><div class="metric"><small id="feeLabel">Est. 7-day fees*</small><strong id="fees">—</strong><span id="capitalLabel">on $10,000</span></div></div></div>
 <div class="sideStack"><section class="card panel"><div class="eyebrow">MY LP POSITIONS</div><h2 style="margin:6px 0 14px">Range watch</h2><div class="positionForm"><label class="full">Pool<select id="positionPool"></select></label><label>Lower<input id="posLower" type="number" step="any"></label><label>Upper<input id="posUpper" type="number" step="any"></label><label>Capital<input id="posCapital" type="number" step="100" value="10000"></label><button class="btn btnPrimary" id="savePosition" style="align-self:end">Save position</button></div><div class="positions" id="positions"></div></section>
 <section class="card panel"><div class="eyebrow">$100 → $10,000</div><h2 style="margin:6px 0 12px">Challenge tracker</h2><label>Current balance<input id="challengeValue" type="number" min="0" step="1" value="100"></label><div class="challengeProgress"><div class="challengeFill" id="challengeFill" style="width:0%"></div></div><div class="challengeNumbers"><span>$100 start</span><strong id="challengePct">0%</strong><span>$10,000 goal</span></div></section></div></section>
-<section class="card directory"><div class="sectionHead"><div><div class="eyebrow">LIVE POOL SCANNER</div><h2>Robinhood pool directory</h2><div style="color:#72827a;font-size:11px;margin-top:-12px;margin-bottom:14px">Includes Robinhood Stock Token pools detected from Robinhood's canonical Chain ID 4663 asset registry.</div></div><div class="filters"><select id="poolType"><option value="all">All Pools</option><option value="stocks">Robinhood Stock Tokens</option></select><input id="search" placeholder="Search pool, stock or token…"><select id="rank"><option value="score">Rank: Perfect score</option><option value="apr">Rank: Range-adjusted APR</option><option value="volume">Rank: Volume</option><option value="liquidity">Rank: Liquidity</option></select></div></div><div class="tableWrap"><table><thead><tr><th>Pool</th><th>Price</th><th>24h volume</th><th>Liquidity</th><th>24h</th><th>Perfect range</th><th>Score</th><th>24h Run-Rate APR*</th></tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty">Loading live Robinhood pools…</div></div></section>
+<section class="card directory"><div class="sectionHead"><div><div class="eyebrow">LIVE POOL SCANNER</div><h2>Robinhood pool directory</h2><div style="color:#72827a;font-size:11px;margin-top:-12px;margin-bottom:14px">Includes Robinhood Stock Token pools detected from Robinhood's canonical Chain ID 4663 asset registry.</div></div><div class="filters"><select id="poolType"><option value="all">All Pools</option><option value="stocks">Robinhood Stock Tokens</option></select><input id="search" placeholder="Search pool, stock or token…"><select id="rank"><option value="score">Rank: Perfect score</option><option value="apr">Rank: Range-adjusted APR</option><option value="volume">Rank: Volume</option><option value="liquidity">Rank: Liquidity</option></select></div></div><div class="tableWrap"><table><thead><!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CryptoPride Range Lab V6</title><meta name="description" content="Robinhood Chain LP range analytics and concentrated liquidity range scoring"><style>
+*{box-sizing:border-box}html{background:#060a0c;color:#f5f8f6}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 80% -5%,rgba(91,255,170,.14),transparent 31%),radial-gradient(circle at 0 55%,rgba(55,122,255,.08),transparent 27%),#060a0c;min-height:100vh}main{max-width:1480px;margin:auto;padding:38px 24px 80px}a{color:inherit}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}.brand{font-weight:900;letter-spacing:-.6px}.brand span{color:#69f7aa}.topActions{display:flex;align-items:center;gap:10px}.network{font-size:11px;padding:9px 12px;border:1px solid #24352c;border-radius:99px;color:#a9b7af;background:#0b1210}.joinMaxfi{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:12px;font-weight:900;padding:10px 14px;border-radius:99px;background:#69f7aa;color:#07100b;border:1px solid #69f7aa;box-shadow:0 0 20px rgba(105,247,170,.12)}.joinMaxfi:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(105,247,170,.18)}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#69f7aa;box-shadow:0 0 12px #69f7aa;margin-right:7px}.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:28px;align-items:end;margin-bottom:26px}.eyebrow{font-size:11px;letter-spacing:2.2px;color:#69f7aa;font-weight:900}.hero h1{font-size:clamp(46px,6.3vw,86px);line-height:.91;letter-spacing:-5px;margin:10px 0 17px;max-width:950px}.hero h1 span{color:#69f7aa}.hero p{color:#8d9b94;line-height:1.6;max-width:760px;font-size:16px}.heroAside{justify-self:end;max-width:390px;color:#77867e;font-size:12px;line-height:1.6;border-left:1px solid #1c2922;padding-left:18px}.card{background:linear-gradient(180deg,#0d1411,#090e0c);border:1px solid #1a2821;border-radius:18px;box-shadow:0 16px 48px rgba(0,0,0,.23)}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}.stat{padding:17px 18px}.stat small,.metric small{display:block;color:#708078;font-size:10px;letter-spacing:1.2px;text-transform:uppercase}.stat strong{display:block;font-size:20px;margin-top:4px}.green{color:#69f7aa!important}.red{color:#ff6f7b!important}.amber{color:#f5cc63!important}.grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(330px,.75fr);gap:12px}.panel{padding:22px}.sectionHead{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.sectionHead h2{margin:6px 0 18px;font-size:24px;letter-spacing:-.6px}.badge{font-size:10px;color:#69f7aa;border:1px solid #21523a;background:#0d2116;padding:7px 9px;border-radius:20px;letter-spacing:1px;white-space:nowrap}.controls{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}.widthControl{margin:14px 0 4px;padding:14px;border:1px solid #1d3026;border-radius:13px;background:#08110d}.widthHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}.widthHead b{font-size:13px}.widthHead small{color:#718078}.widthGrid{display:grid;grid-template-columns:1fr 120px 160px;gap:10px;align-items:center}.widthGrid input{margin:0}.widthValue{font-weight:900;text-align:center;color:#69f7aa;border:1px solid #223129;background:#070c0a;padding:11px;border-radius:10px}.perfectHint{margin-top:8px;color:#728078;font-size:11px;line-height:1.45}.optimizerPanel{margin:10px 0 16px;padding:14px;border:1px solid #1d3026;border-radius:13px;background:#08110d}.optimizerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.optimizerValue{margin-top:6px;padding:11px 12px;border:1px solid #223129;border-radius:10px;background:#070c0a;font-weight:800}.compareLine{margin-top:10px;color:#74847b;font-size:11px;line-height:1.5}.compareLine b{color:#dff8ea}.miniGood{color:#69f7aa}.miniWarn{color:#f5cc63}label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#738078}select,input{width:100%;margin-top:6px;border:1px solid #223129;background:#070c0a;color:#f2f6f4;padding:12px 12px;border-radius:10px;outline:none}input:focus,select:focus{border-color:#4bab73}.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}.modes button,.btn{border:1px solid #202e27;background:#090f0c;color:#dbe4df;border-radius:11px;padding:12px;cursor:pointer}.modes button{text-align:left}.modes button b,.modes button small{display:block}.modes button small{color:#65746c;margin-top:3px}.modes button.active{border-color:#69f7aa;background:#0f2117;box-shadow:inset 0 0 0 1px rgba(105,247,170,.13)}.recommendation{background:linear-gradient(135deg,#0b1710,#09100d);border:1px solid #254936;border-radius:15px;padding:20px;margin-bottom:10px}.recTop{display:flex;justify-content:space-between;gap:15px}.score{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;border:6px solid #244734;background:#08110c;font-size:20px;font-weight:900}.rangeBig{font-size:clamp(26px,3vw,42px);letter-spacing:-1.8px;font-weight:900;color:#69f7aa;margin:8px 0}.rangeBig span{color:#506159}.recText{color:#829189;font-size:12px;line-height:1.55;max-width:710px}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border:1px solid #18251e;background:#18251e;border-radius:13px;overflow:hidden}.metric{background:#080e0b;padding:16px}.metric strong{display:block;margin-top:5px;font-size:18px}.riskbar{height:6px;border-radius:9px;background:#152019;overflow:hidden;margin-top:8px}.riskfill{height:100%;background:#69f7aa;border-radius:9px}.sideStack{display:grid;gap:12px}.positionForm{display:grid;grid-template-columns:1fr 1fr;gap:8px}.positionForm .full{grid-column:1/-1}.btnPrimary{background:#69f7aa;border-color:#69f7aa;color:#07100b;font-weight:900}.btnDanger{color:#ff8b93}.positions{display:grid;gap:8px;margin-top:12px}.position{border:1px solid #1b2922;border-radius:12px;padding:13px;background:#080e0b}.positionTop{display:flex;justify-content:space-between;gap:8px}.position strong{font-size:13px}.position small{color:#68776f}.status{font-size:10px!important;padding:5px 7px;border-radius:10px;border:1px solid #274a37;color:#69f7aa}.challengeProgress{height:12px;border-radius:20px;background:#172019;overflow:hidden;margin:12px 0 7px}.challengeFill{height:100%;background:linear-gradient(90deg,#69f7aa,#b9ffd6);border-radius:20px}.challengeNumbers{display:flex;justify-content:space-between;color:#75847c;font-size:11px}.directory{padding:22px;margin-top:12px}.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.filters input{margin:0;min-width:220px}.filters select{margin:0;width:auto}.tableWrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1120px}th{text-align:left;padding:11px 12px;border-bottom:1px solid #1a2720;color:#66766e;font-size:10px;letter-spacing:1px;text-transform:uppercase}td{padding:13px 12px;border-bottom:1px solid #111b16;color:#cbd5d0;font-size:12px}td:first-child b{display:block;color:#fff;font-size:13px}td:first-child small{color:#526159}.row{cursor:pointer}.row:hover,.row.selected{background:#0d1812}.pill{font-size:10px;border:1px solid #24362c;border-radius:20px;padding:5px 7px}.empty{text-align:center;color:#718078;padding:32px}.disclaimer{margin-top:12px;padding:16px 18px;border:1px solid #3a321b;background:#161208;color:#a99a74;border-radius:13px;font-size:11px;line-height:1.6}.error{display:none;margin:10px 0;padding:13px;border:1px solid #5c2b30;background:#1a0b0e;color:#ff8a94;border-radius:12px}footer{text-align:center;color:#46564e;margin-top:26px;font-size:10px;letter-spacing:1.5px}@media(max-width:1050px){.grid,.hero{grid-template-columns:1fr}.heroAside{justify-self:start}.stats{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.widthGrid{grid-template-columns:1fr}.topbar{align-items:flex-start;gap:14px}.topActions{flex-direction:column;align-items:flex-end}.joinMaxfi{font-size:11px;padding:9px 11px}main{padding:24px 14px 55px}.stats{grid-template-columns:1fr 1fr}.controls,.metrics,.modes{grid-template-columns:1fr 1fr}.hero h1{letter-spacing:-3px}.recTop{flex-direction:column}.score{width:64px;height:64px}.filters{align-items:stretch}.filters input,.filters select{width:100%}}@media(max-width:450px){.stats,.controls,.metrics,.modes,.positionForm{grid-template-columns:1fr}.positionForm .full{grid-column:auto}}
+</style></head><body><main>
+<div class="topbar"><div class="brand">CRYPTOPRIDE <span>RANGE LAB</span></div><div class="topActions"><a class="joinMaxfi" href="https://www.maxfi.tech/deposit?ref=0xe96728909fAa37faA803865d946bD73cb0ed2118" target="_blank" rel="noopener noreferrer sponsored">To Join MaxFi Click Here</a><div class="network"><span class="dot"></span> ROBINHOOD CHAIN · 4663</div></div></div>
+<section class="hero"><div><div class="eyebrow">CONCENTRATED LIQUIDITY DECISION ENGINE</div><h1>Find your <span>Perfect Range.</span></h1><p>Compare live pools, score a range against recent volatility, estimate fees, and track the LP positions you actually care about.</p></div><div class="heroAside">V6.1 uses live GeckoTerminal market data, rolling historical backtests, on-chain tick spacing, and minimum-fit guardrails. The APR engine separates base pool fee yield from range concentration and adjusts it by historical time in range. Scores are analytics heuristics — not guarantees, forecasts, or financial advice.</div></section>
+<section class="stats"><div class="stat card"><small>Pools scanned</small><strong id="poolCount">…</strong></div><div class="stat card"><small>24h volume</small><strong id="totalVolume">…</strong></div><div class="stat card"><small>Top 24h run-rate APR</small><strong id="topApr">…</strong></div><div class="stat card"><small>Selected fit</small><strong id="topFit">…</strong></div><div class="stat card"><small>Data status</small><strong class="green" id="dataStatus">Connecting</strong></div></section>
+<div class="error" id="errorBox"></div>
+<section class="grid"><div class="card panel"><div class="sectionHead"><div><div class="eyebrow">PERFECT RANGE ENGINE</div><h2>🎯 Range recommendation</h2></div><div class="badge">CRYPTOPRIDE V6.1 · LIQUIDITY OPTIMIZER</div></div>
+<div class="controls"><label>Pool<select id="poolSelect"></select></label><label>Capital<input id="capital" type="number" min="0" step="100" value="10000"></label><label>Horizon<select id="days"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="90">90 days</option></select></label><label>LP fee tier<select id="feeTierSelect"><option value="0.0001">0.01%</option><option value="0.0005">0.05%</option><option value="0.003" selected>0.30%</option><option value="0.01">1.00%</option></select></label></div>
+<div class="widthControl"><div class="widthHead"><div><b>Range Width %</b><br><small>0 = Auto Perfect Width · total width, centered around spot</small></div><div class="badge" id="perfectWidthBadge">PERFECT: —</div></div><div class="widthGrid"><input id="widthSlider" type="range" min="0" max="100" step="0.5" value="0"><div class="widthValue" id="widthValue">AUTO</div><button class="btn btnPrimary" id="usePerfectWidth">Use Perfect Width</button></div><div class="perfectHint" id="widthHint">Load a pool to calculate the recommended width.</div></div><div class="optimizerPanel"><div class="eyebrow">V6 POOL-SPECIFIC OPTIMIZER</div><div class="optimizerGrid"><label>On-chain tick spacing<div class="optimizerValue" id="tickSpacingValue">—</div></label><label>Minimum valid width<div class="optimizerValue" id="minWidthValue">—</div></label><label>Rebalance delay<select id="rebalanceDelay"><option value="0">Instant</option><option value="2">2 hours</option><option value="6" selected>6 hours</option><option value="12">12 hours</option><option value="24">24 hours</option><option value="48">48 hours</option></select></label><label>MaxFi width shown<input id="maxfiWidth" type="number" min="0" max="300" step="0.1" placeholder="e.g. 5.0"></label></div><div class="compareLine" id="optimizerExplain">V6 tests tick-valid widths against rolling price history, fee efficiency, liquidity competition proxy, and rebalance burden. Enter MaxFi’s displayed width to compare side by side.</div></div>
+<div class="modes" id="modes"><button data-mode="aggressive"><b>🔥 Aggressive</b><small>Highest concentration</small></button><button data-mode="sweet" class="active"><b>⭐ Sweet Spot</b><small>Best balance</small></button><button data-mode="conservative"><b>🛡️ Conservative</b><small>Extra cushion</small></button><button data-mode="setforget"><b>🏦 Set & Forget</b><small>Maximum width</small></button></div>
+<div class="recommendation"><div class="recTop"><div><small class="eyebrow">RECOMMENDED RANGE</small><div class="rangeBig" id="range">—</div><div class="recText" id="recText">Analyzing live price and historical volatility…</div></div><div><div class="score" id="score">—</div><small style="display:block;text-align:center;color:#708078;margin-top:5px">CONFIDENCE</small></div></div></div>
+<div class="metrics"><div class="metric"><small>Current price</small><strong id="spot">—</strong><span id="change"></span></div><div class="metric"><small id="fitLabel">Historical stay-in-range</small><strong id="fit">—</strong><div class="riskbar"><div class="riskfill" id="fitBar"></div></div></div><div class="metric"><small>Base pool APR*</small><strong id="baseApr">—</strong><span id="feeTier">fee tier —</span></div><div class="metric"><small>Range-adjusted APR*</small><strong id="apr">—</strong><span id="aprBreakdown">width × fit</span></div><div class="metric"><small id="feeLabel">Est. 7-day fees*</small><strong id="fees">—</strong><span id="capitalLabel">on $10,000</span></div></div></div>
+<div class="sideStack"><section class="card panel"><div class="eyebrow">MY LP POSITIONS</div><h2 style="margin:6px 0 14px">Range watch</h2><div class="positionForm"><label class="full">Pool<select id="positionPool"></select></label><label>Lower<input id="posLower" type="number" step="any"></label><label>Upper<input id="posUpper" type="number" step="any"></label><label>Capital<input id="posCapital" type="number" step="100" value="10000"></label><button class="btn btnPrimary" id="savePosition" style="align-self:end">Save position</button></div><div class="positions" id="positions"></div></section>
+<section class="card panel"><div class="eyebrow">$100 → $10,000</div><h2 style="margin:6px 0 12px">Challenge tracker</h2><label>Current balance<input id="challengeValue" type="number" min="0" step="1" value="100"></label><div class="challengeProgress"><div class="challengeFill" id="challengeFill" style="width:0%"></div></div><div class="challengeNumbers"><span>$100 start</span><strong id="challengePct">0%</strong><span>$10,000 goal</span></div></section></div></section>
+<section class="card directory"><div class="sectionHead"><div><div class="eyebrow">LIVE POOL SCANNER</div><h2>Robinhood pool directory</h2><div style="color:#72827a;font-size:11px;margin-top:-12px;margin-bottom:14px">Includes Robinhood Stock Token pools detected from Robinhood's canonical Chain ID 4663 asset registry.</div></div><div class="filters"><select id="poolType"><option value="all">All Pools</option><option value="stocks">Robinhood Stock Tokens</option></select><input id="search" placeholder="Search pool, stock or token…"><select id="rank"><option value="score">Rank: Perfect score</option><option value="apr">Rank: Range-adjusted APR</option><option value="volume">Rank: Volume</option><option value="liquidity">Rank: Liquidity</option></select></div></div><div class="tableWrap"><table><thead><tr><th>Pool</th>24hr Run-Rate APR*<th>Price</th><th>24h volume</th><th>Liquidity</th><th>24h</th><th>Perfect range</th><th>Score</th><th>Range APR*</th></tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty">Loading live Robinhood pools…</div></div></section>
+<section class="disclaimer"><b>Risk disclosure.</b> Base and range-adjusted APR are estimates based on recent 24h volume, current pool liquidity, the selected LP fee tier, range concentration, and historical time in range. They are not MaxFi returns, not a promise of future fees, and do not model all variables including impermanent loss, token direction, liquidity migration, routing, exact tick-by-tick competing liquidity, smart-contract risk, or changing fee flow. V6 reads tick spacing on-chain when the pool exposes a Uniswap-V3-compatible interface and uses a same-pair fee-efficiency proxy for liquidity competition; it is not MaxFi's proprietary optimizer. Always verify the exact pool and fee tier before depositing.</section><footer>CRYPTOPRIDE RANGE LAB · INDEPENDENT ANALYTICS · MARKET DATA VIA GECKOTERMINAL</footer>
+</main><script>
+const $=id=>document.getElementById(id);let pools=[],selected=null,candles=[],mode='sweet',perfectWidth=null,poolState={},optimizerMeta={};
+const num=v=>Number(v||0), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',notation:Math.abs(n)>=1e6?'compact':'standard',maximumFractionDigits:Math.abs(n)<100?2:0}).format(n||0);
+const pct=n=>`${Number.isFinite(n)?n.toFixed(1):'0.0'}%`; const modes={aggressive:{mult:.75,label:'Aggressive'},sweet:{mult:1.1,label:'Sweet Spot'},conservative:{mult:1.65,label:'Conservative'},setforget:{mult:2.5,label:'Set & Forget'}};
+function attrs(p){return p?.attributes||{}}
+function pairSymbols(a){const parts=String(a?.display_name||a?.name||'').split(/\s+on\s+/i)[0].split('/').slice(0,2);return parts.map(x=>{const m=String(x||'').trim().match(/^([A-Za-z0-9._-]+)/);return (m?m[1]:'').toUpperCase()})}
+const STABLES=new Set(['USDG','USDC','USDT','DAI','USDS','FDUSD','TUSD','USDE','PYUSD','USD1']);
+function inferredFocus(a){const syms=pairSymbols(a),b=syms[0],q=syms[1],bs=STABLES.has(b),qs=STABLES.has(q);if(bs!==qs)return{side:bs?'quote':'base',symbol:bs?q:b,source:'browser-stable-pair'};return{side:a.focus_token_side==='quote'?'quote':'base',symbol:a.focus_token_symbol||(a.focus_token_side==='quote'?q:b)||'base token',source:a.focus_orientation_source||'api'}}
+function deriveSidePrice(a,side){const bu=num(a.base_token_price_usd),qu=num(a.quote_token_price_usd),biq=num(a.base_token_price_quote_token),qib=num(a.quote_token_price_base_token);if(side==='quote'){if(qu>0)return qu;if(bu>0&&qib>0)return bu*qib;if(bu>0&&biq>0)return bu/biq}else{if(bu>0)return bu;if(qu>0&&biq>0)return qu*biq;if(qu>0&&qib>0)return qu/qib}return 0}
+function poolPrice(p){const a=attrs(p),f=inferredFocus(a),api=num(a.focus_token_price_usd),derived=deriveSidePrice(a,f.side);if(a.focus_orientation_source==='cross-pool-reference'&&api>0)return api;if(f.side==='quote'&&STABLES.has(pairSymbols(a)[0])&&api>1.5)return api;return derived||api||num(a.base_token_price_usd)}
+function poolChange(p){const a=attrs(p),f=inferredFocus(a),raw=num(a.price_change_percentage?.h24),v=Number(a.focus_price_change_percentage_h24);if(Number.isFinite(v)&&a.focus_token_side===f.side)return v;return f.side==='quote'?-raw:raw}
+function poolFocusSide(p){return inferredFocus(attrs(p)).side};
+function poolFocusSymbol(p){return inferredFocus(attrs(p)).symbol};
+function poolAddress(p){const a=attrs(p);if(a.address&&/^0x[a-fA-F0-9]{40}$/.test(a.address))return a.address;const m=String(p?.id||'').match(/0x[a-fA-F0-9]{40}/);return m?m[0]:''}
+async function fetchJson(primary,fallback){let firstError='';try{const r=await fetch(primary);const text=await r.text();let j={};try{j=JSON.parse(text)}catch{}if(r.ok)return j;firstError=j.error||`HTTP ${r.status}`}catch(e){firstError=e.message||String(e)}if(!fallback)throw new Error(firstError||'Request failed');const r2=await fetch(fallback,{headers:{accept:'application/json'}});const text2=await r2.text();let j2={};try{j2=JSON.parse(text2)}catch{}if(!r2.ok)throw new Error(j2.error||firstError||`HTTP ${r2.status}`);return j2}
+function closes(){return candles.slice().sort((a,b)=>num(a?.[0])-num(b?.[0])).map(c=>num(c?.[4])).filter(Boolean)}
+  function sevenDayAvgDailyVolume(){
+  if(!candles || candles.length < 168) return null;
+
+  const recent=candles
+    .slice()
+    .sort((a,b)=>num(a?.[0])-num(b?.[0]))
+    .slice(-168);
+
+  const totalVolume=recent.reduce((sum,c)=>{
+    return sum + Math.max(0,num(c?.[5]));
+  },0);
+
+  return totalVolume/7;
+}
+function horizonHours(){const cs=closes(),requested=Math.max(1,num($('days')?.value||7))*24;return Math.max(6,Math.min(Math.round(requested),Math.max(6,cs.length-12)))}
+function rollingRequiredWidths(){const cs=closes(),h=horizonHours();if(cs.length<h+6)return[];const widths=[];for(let i=0;i+h<cs.length;i++){const anchor=cs[i];if(!(anchor>0))continue;let maxAbs=0;for(let j=i+1;j<=i+h;j++){const v=cs[j];if(!(v>0))continue;maxAbs=Math.max(maxAbs,Math.abs(v/anchor-1));}widths.push(maxAbs*200)}return widths}
+function volatility(){const cs=closes();if(cs.length<6)return Math.max(.025,Math.abs(num(attrs(selected).price_change_percentage?.h24))/100*.8);const rs=[];for(let i=1;i<cs.length;i++)rs.push(Math.log(cs[i]/cs[i-1]));const mean=rs.reduce((a,b)=>a+b,0)/rs.length;const variance=rs.reduce((s,r)=>s+(r-mean)**2,0)/Math.max(1,rs.length-1);return clamp(Math.sqrt(variance)*Math.sqrt(Math.max(24,horizonHours())),.018,.65)}
+function rangeFromWidth(price,widthPct){const width=clamp(num(widthPct),.01,100),half=width/200;return{lower:price*(1-half),upper:price*(1+half),widthPct:width}}
+function fallbackWidth(change,volOverride){const vol=volOverride??Math.max(.025,Math.abs(change)/100*.9);return clamp(vol*modes[mode].mult*200,1,100)}
+function rangeFor(price,change,volOverride,widthOverride){return rangeFromWidth(price,widthOverride??fallbackWidth(change,volOverride))}
+function widthTarget(){return {aggressive:72,sweet:86,conservative:94,setforget:98}[mode]||86}
+function inferredTickSpacing(){const t=Math.abs(num(poolState?.tickSpacing));if(t)return t;const rate=feeRate();if(rate<=.0001)return 1;if(rate<=.0005)return 10;if(rate<=.003)return 60;if(rate<=.01)return 200;return 10}
+function tickWidthPct(spacing=inferredTickSpacing()){return Math.max(.01,(Math.pow(1.0001,Math.max(1,spacing))-1)*100)}
+function snapWidth(width){const min=tickWidthPct();const snapped=Math.round(Math.max(width,min)/min)*min;return clamp(snapped,min,300)}
+function fitAtWidth(width){const widths=rollingRequiredWidths();if(!widths.length)return null;return widths.filter(w=>w<=width).length/widths.length*100}
+function pairKey(p){const a=attrs(p),sy=pairSymbols(a).filter(Boolean).map(x=>STABLES.has(x)?'USD':x).sort();return sy.join('|')}
+function competitionProxy(p=selected){if(!p)return{factor:1,score:50,peerCount:0};const key=pairKey(p),peers=pools.filter(x=>pairKey(x)===key);const eff=peers.map(x=>{const a=attrs(x),l=num(a.reserve_in_usd),v=num(a.volume_usd?.h24);return l>0?v/l:0}).filter(x=>x>0).sort((a,b)=>a-b);const a=attrs(p),self=num(a.reserve_in_usd)>0?num(a.volume_usd?.h24)/num(a.reserve_in_usd):0;if(!eff.length||!self)return{factor:1,score:50,peerCount:peers.length};const med=eff[Math.floor(eff.length/2)]||self;const ratio=clamp(self/Math.max(med,1e-9),.35,2.5);const factor=clamp(Math.sqrt(ratio),.65,1.5);return{factor,score:Math.round(clamp(50+Math.log(ratio)*22,10,90)),peerCount:peers.length}}
+function rebalancePenalty(fitPct,width){const delay=Math.max(0,num($('rebalanceDelay')?.value||0));const fit=clamp((fitPct??widthTarget())/100,.01,1);const out=1-fit;const delayDrag=out*Math.min(delay/24,.8);const churnDrag=out*clamp(8/Math.max(width,1),.05,.55);return clamp(1-delayDrag-churnDrag,.35,1)}
+function concentrationMultiplier(width){
+  const w=clamp(num(width),.1,300);
+
+  // Theoretical capital efficiency from narrowing the range.
+  // We compress it heavily because pool APR already reflects
+  // existing concentrated liquidity and active LP competition.
+  const theoretical=100/w;
+
+  // Log compression prevents narrow ranges from creating
+  // unrealistic 5x, 20x, 100x APR multipliers.
+  const compressed=1+Math.log1p(Math.max(theoretical-1,0));
+
+  // Only a portion of theoretical concentration should be
+  // treated as realizable fee efficiency.
+  const realization=0.30;
+
+  return clamp(
+    1+(compressed-1)*realization,
+    0.75,
+    2.25
+  );
+}
+
+function aprModel(vol,liq,width,fitPct,rate=feeRate()){
+  if(!liq||!vol||!rate){
+    return{
+      base:0,
+      mult:1,
+      fitFactor:0,
+      competition:1,
+      rebalance:1,
+      adjusted:0
+    };
+  }
+
+  const base=vol*rate/liq*365*100;
+
+  const mult=concentrationMultiplier(width);
+
+  const fitFactor=clamp(
+    (fitPct==null?widthTarget():fitPct)/100,
+    0,
+    1
+  );
+
+  const cp=competitionProxy();
+
+  const rebalance=rebalancePenalty(fitPct,width);
+
+  const adjusted=
+    base *
+    mult *
+    fitFactor *
+    cp.factor *
+    rebalance;
+
+  return{
+    base:clamp(base,0,9999),
+    mult,
+    fitFactor,
+    competition:cp.factor,
+    competitionScore:cp.score,
+    rebalance,
+    adjusted:clamp(adjusted,0,9999)
+  };
+}
+function modeBounds(){
+  const min=tickWidthPct();
+
+  const b={
+    aggressive:[.5,3],
+    sweet:[3.5,15],
+    conservative:[15,50],
+    setforget:[25,100]
+  }[mode]||[3.5,15];
+
+  return[
+    Math.max(min,b[0]),
+    Math.max(min,b[1])
+  ];
+}
+
+function minimumFitFloor(){return {aggressive:40,sweet:65,conservative:80,setforget:90}[mode]||65}
+function optimizerScore(width,vol,liq,rate){const fit=fitAtWidth(width);const am=aprModel(vol,liq,width,fit,rate);const target=widthTarget();const floor=minimumFitFloor();const fitScore=fit==null?45:100-Math.abs(target-fit)*1.25;const returnScore=clamp(Math.log10(1+am.adjusted)*28,0,100);const churnScore=am.rebalance*100;const shortfall=fit==null?20:Math.max(0,floor-fit);const guardrailPenalty=shortfall*2.8;return{width,fit,am,score:fitScore*.46+returnScore*.34+churnScore*.20-guardrailPenalty}}
+function calculatePerfectWidth(price,change,volOverride){const a=attrs(selected),vol=num(a.volume_usd?.h24),liq=num(a.reserve_in_usd),rate=feeRate(),bounds=modeBounds(),min=tickWidthPct(),floor=minimumFitFloor();let best=null;const candidates=new Set(),step=Math.max(min,.25);for(let w=bounds[0];w<=bounds[1]+1e-9;w+=step)candidates.add(snapWidth(w));const historical=rollingRequiredWidths();for(const w of historical)candidates.add(snapWidth(clamp(w,bounds[0],bounds[1])));const scored=[...candidates].filter(w=>w>=bounds[0]-min&&w<=bounds[1]+min).map(w=>optimizerScore(w,vol,liq,rate));const feasible=scored.filter(x=>x.fit!=null&&x.fit>=floor);if(feasible.length){best=feasible.sort((a,b)=>b.score-a.score)[0];optimizerMeta={floor,guardrail:false,fit:best.fit,bounds};}
+else if(scored.length){let expanded=[];for(let w=bounds[1]+step;w<=100+1e-9;w+=step){const x=optimizerScore(snapWidth(w),vol,liq,rate);expanded.push(x);if(x.fit!=null&&x.fit>=floor){best=x;break;}}if(!best){best=[...scored,...expanded].sort((a,b)=>(b.fit??-1)-(a.fit??-1)||b.score-a.score)[0];}optimizerMeta={floor,guardrail:true,fit:best.fit,bounds};}
+if(best)return Math.round(best.width*100)/100;optimizerMeta={floor,guardrail:true,fit:null,bounds};return snapWidth(fallbackWidth(change,volOverride))}
+function selectedWidth(price,change,volOverride){const manual=num($('widthSlider').value);perfectWidth=calculatePerfectWidth(price,change,volOverride);return manual>0?snapWidth(manual):perfectWidth}
+function fitFor(r){return fitAtWidth(r.widthPct)}
+function feeRate(){const onchain=num(poolState?.feeRate);return onchain>0?onchain:Math.max(0,num($('feeTierSelect')?.value||.003))}
+function detectedFeeRate(a){const candidates=[a?.pool_fee_percentage,a?.fee_percentage,a?.fee_tier,a?.fees?.percentage];for(const v of candidates){const n=Number(v);if(Number.isFinite(n)&&n>0){return n>1?n/10000:n>0.02?n/100:n}}const name=String(a?.name||'');const m=name.match(/(?:^|\s)(0\.01|0\.02|0\.046|0\.05|0\.3|0\.30|1(?:\.0+)?)%/);return m?Number(m[1])/100:null}
+function syncFeeTierFromPool(){if(!selected||!$('feeTierSelect'))return;const detected=num(poolState?.feeRate)||detectedFeeRate(attrs(selected));if(detected){const opts=[...$('feeTierSelect').options];const best=opts.reduce((a,o)=>Math.abs(Number(o.value)-detected)<Math.abs(Number(a.value)-detected)?o:a,opts[0]);$('feeTierSelect').value=best.value}}
+function confidence(r,fit,liq,vol){const fitScore=fit==null?60:fit;const depth=clamp(Math.log10(Math.max(liq,10))/6*100,15,100);const activity=clamp(Math.log10(Math.max(vol,10))/7*100,10,100);const widthPenalty=r.widthPct<tickWidthPct()*1.5?12:r.widthPct>80?8:0;return Math.round(clamp(fitScore*.55+depth*.22+activity*.18+competitionProxy().score*.05-widthPenalty,5,99))}
+function rowData(p){const a=attrs(p),price=poolPrice(p),vol=num(a.volume_usd?.h24),liq=num(a.reserve_in_usd),ch=poolChange(p),r=rangeFor(price,ch),rate=detectedFeeRate(a)||feeRate(),am=aprModel(vol,liq,r.widthPct,widthTarget(),rate),apr=am.adjusted,score=Math.round(clamp(52+Math.log10(Math.max(liq,10))*5+Math.log10(Math.max(vol,10))*3-Math.abs(ch)*1.1,5,98));return{p,a,price,vol,liq,ch,r,apr,baseApr:am.base,score}}
+function renderDirectory(){const q=$('search').value.toLowerCase().trim(),rank=$('rank').value,type=$('poolType').value;let data=pools.map(rowData).filter(x=>{const hay=[x.a.display_name||x.a.name,x.a.name,...(x.a.stock_symbols||[]),...(x.a.stock_token_names||[])].join(' ').toLowerCase();return (!q||hay.includes(q))&&(type!=='stocks'||x.a.is_stock_pool)});data.sort((a,b)=>rank==='apr'?b.apr-a.apr:rank==='volume'?b.vol-a.vol:rank==='liquidity'?b.liq-a.liq:b.score-a.score);$('poolCount').textContent=pools.length;$('totalVolume').textContent=money(data.reduce((s,x)=>s+x.vol,0));$('topApr').textContent=data.length?pct(Math.max(...data.map(x=>x.apr))):'—';$('rows').innerHTML=data.map(x=>`<tr class="row ${selected?.id===x.p.id?'selected':''}" data-id="${x.p.id}"><td><b>${(x.a.display_name||x.a.name)}${x.a.is_stock_pool?' <span class="pill green">STOCK TOKEN</span>':''}</b><small>${x.a.stock_symbols?.length?'Robinhood: '+x.a.stock_symbols.join(', ')+' · ':''}${(x.a.address||'').slice(0,9)}…${(x.a.address||'').slice(-5)}</small></td><td>${money(x.price)}</td><td>${money(x.vol)}</td><td>${money(x.liq)}</td><td class="${x.ch>=0?'green':'red'}">${x.ch>=0?'+':''}${pct(x.ch)}</td><td>${money(x.r.lower)} – ${money(x.r.upper)}</td><td><span class="pill">${x.score}/100</span></td><td><b>${pct(x.apr)}</b></td></tr>`).join('');$('empty').style.display=data.length?'none':'block';document.querySelectorAll('.row').forEach(tr=>tr.onclick=()=>selectPool(tr.dataset.id))}
+function recommendationText(score,fit,r,ch){const floor=minimumFitFloor();let msg=score>=85?'Strong setup under this model.':score>=70?'Balanced setup, but keep an eye on the edges.':'Higher-risk setup under current conditions.';if(fit!=null)msg+=` ${fit.toFixed(0)}% of historical ${Math.max(1,num($('days').value))}-day windows stayed inside a range this wide.`;if(optimizerMeta.guardrail)msg+=` Fit guardrail is active: ${modes[mode].label} requires at least ${floor}% historical fit, so CryptoPride widened beyond the normal strategy band when necessary.`;if(Math.abs(ch)>7)msg+=' Recent price movement is elevated, so the range has been widened.';msg+=` ${modes[mode].label} mode is using a ${r.widthPct.toFixed(1)}% total range width (about ±${(r.widthPct/2).toFixed(1)}% around spot).`;return msg}
+
+  function renderCalc(){
+  if(!selected)return;
+
+  const a=attrs(selected);
+  const price=poolPrice(selected);
+  const vol24=num(a.volume_usd?.h24);
+  const vol7=sevenDayAvgDailyVolume();
+  const vol=vol7||vol24;
+  const liq=num(a.reserve_in_usd);
+  const ch=poolChange(selected);
+
+  const volatilityNow=volatility();
+  const width=selectedWidth(price,ch,volatilityNow);
+  const r=rangeFor(price,ch,volatilityNow,width);
+  const fit=fitFor(r);
+  const rate=feeRate();
+
+  const base24=
+    liq>0&&rate>0
+      ? clamp(vol24*rate/liq*365*100,0,9999)
+      : 0;
+
+  const am=aprModel(vol,liq,r.widthPct,fit,rate);
+  const apr=am.adjusted;
+  const capital=num($('capital').value);
+  const days=num($('days').value);
+  const fees=capital*(apr/100)*(days/365);
+
+  const score=confidence(r,fit,liq,vol);
+  const manual=num($('widthSlider').value);
+  const maxfi=num($('maxfiWidth')?.value);
+  const minW=tickWidthPct();
+  const cp=competitionProxy();
+  $('range').innerHTML=`${money(r.lower)} <span>—</span> ${money(r.upper)}`;
+  $('score').textContent=score;
+  $('recText').textContent=recommendationText(score,fit,r,ch);
+  $('spot').textContent=money(price);
+  $('change').textContent=` ${ch>=0?'+':''}${pct(ch)} 24h`;
+  $('change').className=ch>=0?'green':'red';
+  $('fit').textContent=fit==null?'—':pct(fit);
+  $('fitLabel').textContent=`Rolling ${Math.max(1,num($('days').value))}-day fit`;
+  $('fitBar').style.width=`${clamp(fit??0,0,100)}%`;
+  $('baseApr').textContent=pct(am.base);
+  $('apr').textContent=pct(apr);
+  $('feeTier').textContent=
+  vol7
+    ? `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · 24h run rate ${pct(base24)} · 7d avg volume ${money(vol7)}`
+    : `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · using 24h volume until 7d history loads`;
+  $('aprBreakdown').textContent=`${am.mult.toFixed(2)}× modeled fee efficiency · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
+  $('fees').textContent=money(fees);
+  $('feeLabel').textContent=`Est. ${days}-day fees*`;
+  $('capitalLabel').textContent=`on ${money(capital)}`;
+  $('topFit').textContent=fit==null?'—':pct(fit);
+  $('perfectWidthBadge').textContent=`V6 OPTIMAL: ${perfectWidth.toFixed(2)}%`;
+  $('widthValue').textContent=manual>0?`${snapWidth(manual).toFixed(2)}%`:'AUTO';
+  $('widthHint').textContent=manual>0
+    ?`Manual width snaps to valid tick increments. V6 optimized width for ${modes[mode].label} is ${perfectWidth.toFixed(2)}%.`
+    :`V6.1 optimized width is ${perfectWidth.toFixed(2)}% for ${modes[mode].label}. Minimum fit guardrail: ${minimumFitFloor()}%.${optimizerMeta.guardrail?' The normal strategy band could not meet that floor, so the optimizer widened the range.':''}`;
+  $('tickSpacingValue').textContent=poolState?.tickSpacing?`${poolState.tickSpacing} ticks`:`~${inferredTickSpacing()} ticks`;
+  $('minWidthValue').textContent=`${minW.toFixed(minW<.1?3:2)}%`;
+  let comparison=`Minimum fit guardrail: <b class="${(fit??0)>=minimumFitFloor()?'miniGood':'miniWarn'}">${minimumFitFloor()}%</b> · selected fit: <b>${fit==null?'—':fit.toFixed(1)+'%'}</b>${optimizerMeta.guardrail?' · <b class="miniWarn">guardrail widened range</b>':''} · Competition proxy: <b>${cp.score}/100</b> (${cp.peerCount} same-pair pools) · rebalance delay: <b>${num($('rebalanceDelay').value)}h</b>`;
+  if(maxfi>0){
+    const delta=perfectWidth-maxfi;
+    comparison+=` · MaxFi shown: <b>${maxfi.toFixed(1)}%</b> · CryptoPride: <b>${perfectWidth.toFixed(2)}%</b> · delta: <b class="${Math.abs(delta)<=1?'miniGood':'miniWarn'}">${delta>=0?'+':''}${delta.toFixed(2)} pts</b>`;
+  }else comparison+=' · Enter the width currently shown on MaxFi to compare.';
+  $('optimizerExplain').innerHTML=comparison;
+  renderPositions();
+}
+async function selectPool(id){
+  selected=pools.find(p=>p.id===id)||selected;
+  if(!selected)return;
+  $('poolSelect').value=selected.id;
+  $('positionPool').value=selected.id;
+  poolState={};candles=[];renderDirectory();
+  try{
+    const pa=poolAddress(selected);
+    if(pa)poolState=await fetchJson(`/api/pool-state?pool=${pa}`);
+  }catch(e){poolState={};}
+  syncFeeTierFromPool();
+  renderCalc();
+  try{
+    $('dataStatus').textContent='Loading history';
+    const a=attrs(selected),address=a.history_pool_address||poolAddress(selected);
+    if(!address)throw new Error('Pool address unavailable');
+    const tokenSide=a.history_token_side||poolFocusSide(selected);
+    const remote=`https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${address}/ohlcv/hour?aggregate=1&limit=336&currency=usd&token=${tokenSide}`;
+    const j=await fetchJson(`/api/ohlcv?pool=${address}&timeframe=hour&limit=336&token=${tokenSide}`,remote);
+    let loaded=j?.data?.attributes?.ohlcv_list||[];
+    const focusPrice=poolPrice(selected);
+    if(loaded.length&&focusPrice>0){
+      const mids=loaded.map(c=>num(c?.[4])).filter(x=>x>0).sort((x,y)=>x-y);
+      const med=mids.length?mids[Math.floor(mids.length/2)]:0;
+      if(med>0&&(med/focusPrice>4||focusPrice/med>4))throw new Error(`History scale mismatch: ${med} vs ${focusPrice}`);
+    }
+    candles=loaded;
+    $('dataStatus').textContent=a.history_reference_symbol?`Live · ${a.history_reference_symbol} history`:'Live';
+  }catch(e){candles=[];$('dataStatus').textContent='Live · no valid history';}
+  renderCalc();
+}
+function saved(){try{return JSON.parse(localStorage.getItem('lpr_positions')||'[]')}catch{return[]}}
+function renderPositions(){const list=saved();if(!list.length){$('positions').innerHTML='<div style="color:#65756d;font-size:12px">No saved positions yet.</div>';return}$('positions').innerHTML=list.map((x,i)=>{const p=pools.find(z=>z.id===x.poolId),price=poolPrice(p),distance=Math.min(Math.abs(price-x.lower),Math.abs(x.upper-price))/Math.max(price,.000001)*100;let label='🟢 SAFE',cls='green';if(price<x.lower||price>x.upper){label='🔴 OUT OF RANGE';cls='red'}else if(distance<2){label='🟠 NEAR EDGE';cls='amber'}else if(distance<5){label='🟡 WATCH IT';cls='amber'}return `<div class="position"><div class="positionTop"><div><strong>${x.name}</strong><small style="display:block">${money(x.lower)} – ${money(x.upper)} · ${money(x.capital)}</small></div><div><span class="status ${cls}">${label}</span> <button class="btn btnDanger" onclick="removePosition(${i})" style="padding:5px 7px">×</button></div></div></div>`}).join('')}
+window.removePosition=i=>{const list=saved();list.splice(i,1);localStorage.setItem('lpr_positions',JSON.stringify(list));renderPositions()}
+$('savePosition').onclick=()=>{const p=pools.find(z=>z.id===$('positionPool').value);const lower=num($('posLower').value),upper=num($('posUpper').value);if(!p||!lower||!upper||lower>=upper)return alert('Enter a valid lower and upper range.');const list=saved();list.unshift({poolId:p.id,name:attrs(p).display_name||attrs(p).name,lower,upper,capital:num($('posCapital').value)});localStorage.setItem('lpr_positions',JSON.stringify(list.slice(0,12)));renderPositions()}
+function updateChallenge(){const v=num($('challengeValue').value),progress=clamp((v-100)/(10000-100)*100,0,100);$('challengeFill').style.width=`${progress}%`;$('challengePct').textContent=`${progress.toFixed(1)}%`;localStorage.setItem('lpr_challenge',v)}
+async function load(){try{const j=await fetchJson('/api/pools?pages=8');pools=(j.data||[]).filter(p=>poolPrice(p)>0);if(!pools.length)throw new Error('No Robinhood pools were returned');const opts=pools.map(p=>`<option value="${p.id}">${attrs(p).display_name||attrs(p).name}</option>`).join('');$('poolSelect').innerHTML=opts;$('positionPool').innerHTML=opts;selected=pools[0]||null;$('dataStatus').textContent='Live';renderDirectory();renderPositions();const cv=localStorage.getItem('lpr_challenge');if(cv)$('challengeValue').value=cv;updateChallenge();if(selected)await selectPool(selected.id)}catch(e){$('errorBox').style.display='block';$('errorBox').textContent=`Live data error: ${e.message}. If you just redeployed, open /api/pools in a new tab to verify the data route.`;$('dataStatus').textContent='Error';$('empty').textContent='Could not load live pools.'}}
+$('search').oninput=renderDirectory;$('rank').onchange=renderDirectory;$('poolType').onchange=renderDirectory;$('poolSelect').onchange=e=>selectPool(e.target.value);$('capital').oninput=renderCalc;$('days').onchange=renderCalc;$('feeTierSelect').onchange=()=>{poolState={...poolState,feeRate:num($('feeTierSelect').value)};renderDirectory();renderCalc()};$('widthSlider').oninput=renderCalc;$('rebalanceDelay').onchange=renderCalc;$('maxfiWidth').oninput=renderCalc;$('usePerfectWidth').onclick=()=>{if(perfectWidth==null)return;$('widthSlider').value=perfectWidth;renderCalc()};$('challengeValue').oninput=updateChallenge;document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('#modes button').forEach(x=>x.classList.toggle('active',x===b));$('widthSlider').value=0;renderDirectory();renderCalc()});load();
+</script></body></html></thead><tbody id="rows"></tbody></table><div class="empty" id="empty">Loading live Robinhood pools…</div></div></section>
 <section class="disclaimer"><b>Risk disclosure.</b> Base and range-adjusted APR are estimates based on recent 24h volume, current pool liquidity, the selected LP fee tier, range concentration, and historical time in range. They are not MaxFi returns, not a promise of future fees, and do not model all variables including impermanent loss, token direction, liquidity migration, routing, exact tick-by-tick competing liquidity, smart-contract risk, or changing fee flow. V6 reads tick spacing on-chain when the pool exposes a Uniswap-V3-compatible interface and uses a same-pair fee-efficiency proxy for liquidity competition; it is not MaxFi's proprietary optimizer. Always verify the exact pool and fee tier before depositing.</section><footer>CRYPTOPRIDE RANGE LAB · INDEPENDENT ANALYTICS · MARKET DATA VIA GECKOTERMINAL</footer>
 </main><script>
 const $=id=>document.getElementById(id);let pools=[],selected=null,candles=[],mode='sweet',perfectWidth=null,poolState={},optimizerMeta={};

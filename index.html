@@ -82,7 +82,7 @@ function aprModel(vol,liq,width,fitPct,rate=feeRate()){
     };
   }
 
-  $('aprBreakdown').textContent=`${am.mult.toFixed(2)}× modeled fee efficiency · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
+  const base=vol*rate/liq*365*100;
 
   const mult=concentrationMultiplier(width);
 
@@ -146,7 +146,7 @@ function renderCalc(){
   $('baseApr').textContent=pct(am.base);
   $('apr').textContent=pct(apr);
   $('feeTier').textContent=`${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · pricing ${poolFocusSymbol(selected)} (${poolFocusSide(selected)})`;
-  $('aprBreakdown').textContent=`${am.mult.toFixed(1)}× concentration · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
+  $('aprBreakdown').textContent=`${am.mult.toFixed(2)}× modeled fee efficiency · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
   $('fees').textContent=money(fees);
   $('feeLabel').textContent=`Est. ${days}-day fees*`;
   $('capitalLabel').textContent=`on ${money(capital)}`;

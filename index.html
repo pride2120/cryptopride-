@@ -113,7 +113,21 @@ function aprModel(vol,liq,width,fitPct,rate=feeRate()){
     adjusted:clamp(adjusted,0,9999)
   };
 }
+function modeBounds(){
+  const min=tickWidthPct();
 
+  const b={
+    aggressive:[.5,3],
+    sweet:[3.5,15],
+    conservative:[15,50],
+    setforget:[25,100]
+  }[mode]||[3.5,15];
+
+  return[
+    Math.max(min,b[0]),
+    Math.max(min,b[1])
+  ];
+}
 function modeBounds(){
   const min=tickWidthPct();
 

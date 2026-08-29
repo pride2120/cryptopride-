@@ -77,7 +77,9 @@ const quoteStock = stockByAddress.get(quoteAddress);
           ...(pool.attributes || {}),
           base_token_symbol: baseTokenSymbol,
 quote_token_symbol: quoteTokenSymbol,
-          is_stock_pool: stockAssets.length > 0,
+base_token_address: baseAddress,
+quote_token_address: quoteAddress,
+is_stock_pool: stockAssets.length > 0,
           stock_symbols: stockAssets.map(x => x.symbol),
           stock_token_names: stockAssets.map(x => x.name)
         }

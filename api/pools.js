@@ -65,14 +65,18 @@ module.exports = async function handler(req, res) {
       const baseId = pool?.relationships?.base_token?.data?.id || '';
       const quoteId = pool?.relationships?.quote_token?.data?.id || '';
       const baseAddress = extractAddress(baseId) || extractAddress(includedById.get(baseId)?.attributes?.address);
-      const quoteAddress = extractAddress(quoteId) || extractAddress(includedById.get(quoteId)?.attributes?.address);
-      const baseStock = stockByAddress.get(baseAddress);
-      const quoteStock = stockByAddress.get(quoteAddress);
+const quoteAddress = extractAddress(quoteId) || extractAddress(includedById.get(quoteId)?.attributes?.address);
+const baseTokenSymbol = includedById.get(baseId)?.attributes?.symbol || '';
+const quoteTokenSymbol = includedById.get(quoteId)?.attributes?.symbol || '';
+const baseStock = stockByAddress.get(baseAddress);
+const quoteStock = stockByAddress.get(quoteAddress);
       const stockAssets = [baseStock, quoteStock].filter(Boolean);
       return {
         ...pool,
         attributes: {
           ...(pool.attributes || {}),
+          base_token_symbol: baseTokenSymbol,
+quote_token_symbol: quoteTokenSymbol,
           is_stock_pool: stockAssets.length > 0,
           stock_symbols: stockAssets.map(x => x.symbol),
           stock_token_names: stockAssets.map(x => x.name)

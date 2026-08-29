@@ -208,7 +208,9 @@ const vol=vol7||vol24;
   $('feeTier').textContent=
   vol7
     ? `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · 24h run rate ${pct(base24)} · 7d avg volume ${money(vol7)}`
-    : `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · using 24h volume until 7d history loads`;
+    : usesReferenceHistory
+      ? `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · 24h volume used · reference history is price-only`
+      : `${(rate*100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}% LP fee · using 24h volume until 7d history loads`;
   $('aprBreakdown').textContent=`${am.mult.toFixed(2)}× modeled fee efficiency · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
   $('fees').textContent=money(fees);
   $('feeLabel').textContent=`Est. ${days}-day fees*`;

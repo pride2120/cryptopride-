@@ -47,9 +47,73 @@ function fitAtWidth(width){const widths=rollingRequiredWidths();if(!widths.lengt
 function pairKey(p){const a=attrs(p),sy=pairSymbols(a).filter(Boolean).map(x=>STABLES.has(x)?'USD':x).sort();return sy.join('|')}
 function competitionProxy(p=selected){if(!p)return{factor:1,score:50,peerCount:0};const key=pairKey(p),peers=pools.filter(x=>pairKey(x)===key);const eff=peers.map(x=>{const a=attrs(x),l=num(a.reserve_in_usd),v=num(a.volume_usd?.h24);return l>0?v/l:0}).filter(x=>x>0).sort((a,b)=>a-b);const a=attrs(p),self=num(a.reserve_in_usd)>0?num(a.volume_usd?.h24)/num(a.reserve_in_usd):0;if(!eff.length||!self)return{factor:1,score:50,peerCount:peers.length};const med=eff[Math.floor(eff.length/2)]||self;const ratio=clamp(self/Math.max(med,1e-9),.35,2.5);const factor=clamp(Math.sqrt(ratio),.65,1.5);return{factor,score:Math.round(clamp(50+Math.log(ratio)*22,10,90)),peerCount:peers.length}}
 function rebalancePenalty(fitPct,width){const delay=Math.max(0,num($('rebalanceDelay')?.value||0));const fit=clamp((fitPct??widthTarget())/100,.01,1);const out=1-fit;const delayDrag=out*Math.min(delay/24,.8);const churnDrag=out*clamp(8/Math.max(width,1),.05,.55);return clamp(1-delayDrag-churnDrag,.35,1)}
-function concentrationMultiplier(width){const w=clamp(num(width),.1,300);const pts=[[.1,120],[.5,60],[1,40],[2,23],[5,10],[10,6],[15,4.2],[25,2.7],[50,1.55],[100,1],[200,.72],[300,.58]];for(let i=1;i<pts.length;i++){if(w<=pts[i][0]){const [x0,y0]=pts[i-1],[x1,y1]=pts[i];const t=(w-x0)/(x1-x0);return y0+(y1-y0)*t}}return .58}
-function aprModel(vol,liq,width,fitPct,rate=feeRate()){if(!liq||!vol||!rate)return{base:0,mult:1,fitFactor:0,competition:1,rebalance:1,adjusted:0};const base=vol*rate/liq*365*100;const mult=concentrationMultiplier(width);const fitFactor=clamp((fitPct==null?widthTarget():fitPct)/100,0,1);const cp=competitionProxy();const rebalance=rebalancePenalty(fitPct,width);return{base:clamp(base,0,9999),mult,fitFactor,competition:cp.factor,competitionScore:cp.score,rebalance,adjusted:clamp(base*mult*fitFactor*cp.factor*rebalance,0,9999)}}
-function modeBounds(){const min=tickWidthPct();const b={aggressive:[.5,3],sweet:[3.5,15],conservative:[15,50],setforget:[25,100]}[mode]||[3.5,15];return[Math.max(min,b[0]),Math.max(min,b[1])]}
+function concentrationMultiplier(width){
+  const w=clamp(num(width),.1,300);
+
+  // Theoretical capital efficiency from narrowing the range.
+  // We compress it heavily because pool APR already reflects
+  // existing concentrated liquidity and active LP competition.
+  const theoretical=100/w;
+
+  // Log compression prevents narrow ranges from creating
+  // unrealistic 5x, 20x, 100x APR multipliers.
+  const compressed=1+Math.log1p(Math.max(theoretical-1,0));
+
+  // Only a portion of theoretical concentration should be
+  // treated as realizable fee efficiency.
+  const realization=0.30;
+
+  return clamp(
+    1+(compressed-1)*realization,
+    0.75,
+    2.25
+  );
+}
+
+function aprModel(vol,liq,width,fitPct,rate=feeRate()){
+  if(!liq||!vol||!rate){
+    return{
+      base:0,
+      mult:1,
+      fitFactor:0,
+      competition:1,
+      rebalance:1,
+      adjusted:0
+    };
+  }
+
+  const base=vol*rate/liq*365*100;
+
+  const mult=concentrationMultiplier(width);
+
+  const fitFactor=clamp(
+    (fitPct==null?widthTarget():fitPct)/100,
+    0,
+    1
+  );
+
+  const cp=competitionProxy();
+
+  const rebalance=rebalancePenalty(fitPct,width);
+
+  const adjusted=
+    base *
+    mult *
+    fitFactor *
+    cp.factor *
+    rebalance;
+
+  return{
+    base:clamp(base,0,9999),
+    mult,
+    fitFactor,
+    competition:cp.factor,
+    competitionScore:cp.score,
+    rebalance,
+    adjusted:clamp(adjusted,0,9999)
+  };
+}
+
 function minimumFitFloor(){return {aggressive:40,sweet:65,conservative:80,setforget:90}[mode]||65}
 function optimizerScore(width,vol,liq,rate){const fit=fitAtWidth(width);const am=aprModel(vol,liq,width,fit,rate);const target=widthTarget();const floor=minimumFitFloor();const fitScore=fit==null?45:100-Math.abs(target-fit)*1.25;const returnScore=clamp(Math.log10(1+am.adjusted)*28,0,100);const churnScore=am.rebalance*100;const shortfall=fit==null?20:Math.max(0,floor-fit);const guardrailPenalty=shortfall*2.8;return{width,fit,am,score:fitScore*.46+returnScore*.34+churnScore*.20-guardrailPenalty}}
 function calculatePerfectWidth(price,change,volOverride){const a=attrs(selected),vol=num(a.volume_usd?.h24),liq=num(a.reserve_in_usd),rate=feeRate(),bounds=modeBounds(),min=tickWidthPct(),floor=minimumFitFloor();let best=null;const candidates=new Set(),step=Math.max(min,.25);for(let w=bounds[0];w<=bounds[1]+1e-9;w+=step)candidates.add(snapWidth(w));const historical=rollingRequiredWidths();for(const w of historical)candidates.add(snapWidth(clamp(w,bounds[0],bounds[1])));const scored=[...candidates].filter(w=>w>=bounds[0]-min&&w<=bounds[1]+min).map(w=>optimizerScore(w,vol,liq,rate));const feasible=scored.filter(x=>x.fit!=null&&x.fit>=floor);if(feasible.length){best=feasible.sort((a,b)=>b.score-a.score)[0];optimizerMeta={floor,guardrail:false,fit:best.fit,bounds};}

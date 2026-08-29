@@ -82,7 +82,7 @@ function aprModel(vol,liq,width,fitPct,rate=feeRate()){
     };
   }
 
-  const base=vol*rate/liq*365*100;
+  $('aprBreakdown').textContent=`${am.mult.toFixed(2)}× modeled fee efficiency · ${(am.fitFactor*100).toFixed(0)}% fit · ${am.competition.toFixed(2)}× competition · ${(am.rebalance*100).toFixed(0)}% rebalance efficiency`;
 
   const mult=concentrationMultiplier(width);
 

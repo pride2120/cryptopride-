@@ -226,7 +226,7 @@ const vol=vol7||vol24;
 :`V6.1 optimized width is ${perfectWidth.toFixed(2)}% for ${modes[mode].label}. Minimum fit guardrail: ${minimumFitFloor()}%.${mode==='sweet'&&optimizerMeta.guardrail&&(fit??0)<minimumFitFloor()?` Sweet Spot capped at ${optimizerMeta.sweetCap.toFixed(2)}%. Historical fit remains below the ${minimumFitFloor()}% target.`:optimizerMeta.guardrail?' Guardrail active.':''}`;
   $('tickSpacingValue').textContent=poolState?.tickSpacing?`${poolState.tickSpacing} ticks`:`~${inferredTickSpacing()} ticks`;
   $('minWidthValue').textContent=`${minW.toFixed(minW<.1?3:2)}%`;
-  let comparison=`Minimum fit guardrail: <b class="${(fit??0)>=minimumFitFloor()?'miniGood':'miniWarn'}">${minimumFitFloor()}%</b> · selected fit: <b>${fit==null?'—':fit.toFixed(1)+'%'}</b>${optimizerMeta.guardrail?' · <b class="miniWarn">Sweet Spot cap active</b>':''} · Competition proxy: <b>${cp.score}/100</b> (${cp.peerCount} same-pair pools) · rebalance delay: <b>${num($('rebalanceDelay').value)}h</b>`;
+  let comparison=`Minimum fit guardrail: <b class="${(fit??0)>=minimumFitFloor()?'miniGood':'miniWarn'}">${minimumFitFloor()}%</b> · selected fit: <b>${fit==null?'—':fit.toFixed(1)+'%'}</b>${optimizerMeta.guardrail?' · <b class="miniWarn">'+(mode==='sweet'?'Sweet Spot cap active':'Guardrail active')+'</b>':''} · Competition proxy: <b>${cp.score}/100</b> (${cp.peerCount} same-pair pools) · rebalance delay: <b>${num($('rebalanceDelay').value)}h</b>`;
   if(maxfi>0){
     const delta=perfectWidth-maxfi;
     comparison+=` · MaxFi shown: <b>${maxfi.toFixed(1)}%</b> · CryptoPride: <b>${perfectWidth.toFixed(2)}%</b> · delta: <b class="${Math.abs(delta)<=1?'miniGood':'miniWarn'}">${delta>=0?'+':''}${delta.toFixed(2)} pts</b>`;

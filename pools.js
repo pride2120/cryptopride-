@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 8), 1), 10);
+  const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 8), 1), 20);
 
   try {
     const assetsResp = await fetch(RH_ASSETS, {

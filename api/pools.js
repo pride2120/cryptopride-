@@ -8,6 +8,7 @@ const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';
   '0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118';
 
 async function rpc(method, params = []) {
+  const response = await fetch(RH_RPC, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

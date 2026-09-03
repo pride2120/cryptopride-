@@ -63,6 +63,48 @@ function decodePoolCreatedLog(log) {
     pool
   };
 }
+async function fetchOnChainStockPools(stockAddresses) {
+  const topics = stockAddresses
+    .filter(Boolean)
+    .map(addressTopic);
+
+  if (!topics.length) return [];
+
+  const filterBase = {
+    fromBlock: '0x0',
+    toBlock: 'latest',
+    address: UNISWAP_V3_FACTORY
+  };
+
+  const [asToken0, asToken1] = await Promise.all([
+    rpc('eth_getLogs', [{
+      ...filterBase,
+      topics: [POOL_CREATED_TOPIC, topics]
+    }]).catch(() => []),
+
+    rpc('eth_getLogs', [{
+      ...filterBase,
+      topics: [POOL_CREATED_TOPIC, null, topics]
+    }]).catch(() => [])
+  ]);
+
+  const unique = new Map();
+
+  for (const log of [...asToken0, ...asToken1]) {
+    const decoded = decodePoolCreatedLog(log);
+
+    if (
+      decoded.pool &&
+      decoded.token0 &&
+      decoded.token1
+    ) {
+      unique.set(decoded.pool, decoded);
+    }
+  }
+
+  return [...unique.values()];
+}
+
 function extractAddress(value) {
   const m = String(value || '').match(/0x[a-fA-F0-9]{40}/);
   return m ? m[0].toLowerCase() : '';
@@ -171,7 +213,9 @@ module.exports = async function handler(req, res) {
 
     const allPools = [];
     const includedById = new Map();
-
+const onChainStockPools = await fetchOnChainStockPools(
+  [...stockByAddress.keys()]
+).catch(() => []);
     for (let page = 1; page <= pagesRequested; page++) {
       const url = `${GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
       const response = await fetch(url, {

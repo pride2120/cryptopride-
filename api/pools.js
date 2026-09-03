@@ -1,6 +1,107 @@
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';
 const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/tokens';
+const RH_RPC = 'https://rpc.mainnet.chain.robinhood.com';
+const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';
+
+  const POOL_CREATED_TOPIC =
+  '0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118';
+
+async function rpc(method, params = []) {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'user-agent': 'CryptoPride-Range-Lab/6.0'
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method,
+      params
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Robinhood RPC HTTP ${response.status}`);
+  }
+
+  const json = await response.json();
+
+  if (json.error) {
+    throw new Error(json.error.message || 'Robinhood RPC error');
+  }
+
+  return json.result;
+}
+  function addressTopic(address) {
+  const clean = String(address || '').toLowerCase().replace(/^0x/, '');
+  return `0x${clean.padStart(64, '0')}`;
+}
+
+function topicToAddress(topic) {
+  const clean = String(topic || '').replace(/^0x/, '');
+  return clean.length >= 40 ? `0x${clean.slice(-40)}`.toLowerCase() : '';
+}
+
+function decodePoolCreatedLog(log) {
+  async function fetchOnChainStockPools(stockAddresses) {
+  const topics = stockAddresses
+    .filter(Boolean)
+    .map(addressTopic);
+
+  if (!topics.length) return [];
+
+  const filterBase = {
+    fromBlock: '0x0',
+    toBlock: 'latest',
+    address: UNISWAP_V3_FACTORY
+  };
+
+  const [asToken0, asToken1] = await Promise.all([
+    rpc('eth_getLogs', [{
+      ...filterBase,
+      topics: [POOL_CREATED_TOPIC, topics]
+    }]).catch(() => []),
+
+    rpc('eth_getLogs', [{
+      ...filterBase,
+      topics: [POOL_CREATED_TOPIC, null, topics]
+    }]).catch(() => [])
+  ]);
+
+  const unique = new Map();
+
+  for (const log of [...asToken0, ...asToken1]) {
+    const decoded = decodePoolCreatedLog(log);
+
+    if (
+      decoded.pool &&
+      decoded.token0 &&
+      decoded.token1
+    ) {
+      unique.set(decoded.pool, decoded);
+    }
+  }
+
+  return [...unique.values()];
+}
+  const token0 = topicToAddress(log?.topics?.[1]);
+  const token1 = topicToAddress(log?.topics?.[2]);
+  const fee = log?.topics?.[3] ? Number(BigInt(log.topics[3])) : 0;
+
+  const data = String(log?.data || '').replace(/^0x/, '');
+  const poolWord = data.slice(64, 128);
+  const pool = poolWord.length === 64
+    ? `0x${poolWord.slice(-40)}`.toLowerCase()
+    : '';
+
+  return {
+    token0,
+    token1,
+    fee,
+    pool
+  };
+}
 function extractAddress(value) {
   const m = String(value || '').match(/0x[a-fA-F0-9]{40}/);
   return m ? m[0].toLowerCase() : '';

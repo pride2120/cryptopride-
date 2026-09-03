@@ -44,47 +44,7 @@ function topicToAddress(topic) {
 }
 
 function decodePoolCreatedLog(log) {
-  async function fetchOnChainStockPools(stockAddresses) {
-  const topics = stockAddresses
-    .filter(Boolean)
-    .map(addressTopic);
-
-  if (!topics.length) return [];
-
-  const filterBase = {
-    fromBlock: '0x0',
-    toBlock: 'latest',
-    address: UNISWAP_V3_FACTORY
-  };
-
-  const [asToken0, asToken1] = await Promise.all([
-    rpc('eth_getLogs', [{
-      ...filterBase,
-      topics: [POOL_CREATED_TOPIC, topics]
-    }]).catch(() => []),
-
-    rpc('eth_getLogs', [{
-      ...filterBase,
-      topics: [POOL_CREATED_TOPIC, null, topics]
-    }]).catch(() => [])
-  ]);
-
-  const unique = new Map();
-
-  for (const log of [...asToken0, ...asToken1]) {
-    const decoded = decodePoolCreatedLog(log);
-
-    if (
-      decoded.pool &&
-      decoded.token0 &&
-      decoded.token1
-    ) {
-      unique.set(decoded.pool, decoded);
-    }
-  }
-
-  return [...unique.values()];
-}
+  
   const token0 = topicToAddress(log?.topics?.[1]);
   const token1 = topicToAddress(log?.topics?.[2]);
   const fee = log?.topics?.[3] ? Number(BigInt(log.topics[3])) : 0;

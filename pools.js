@@ -1,6 +1,6 @@
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';
-
+const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/tokens';
 function extractAddress(value) {
   const m = String(value || '').match(/0x[a-fA-F0-9]{40}/);
   return m ? m[0].toLowerCase() : '';
@@ -55,7 +55,24 @@ function deriveFocusPrice(pa, side) {
   if (baseUsd && baseInQuote) return baseUsd / baseInQuote;
   return 0;
 }
+async function fetchTokenPools(tokenAddress) {
+  const url = `${GT_TOKEN_POOLS}/${tokenAddress}/pools?include=base_token,quote_token,dex`;
+  const r = await fetch(url, {
+    headers: {
+      accept: 'application/json;version=20230203',
+      'user-agent': 'CryptoPride-Range-Lab/6.0'
+    }
+  });
 
+  if (!r.ok) return { data: [], included: [] };
+
+  const j = await r.json();
+
+  return {
+    data: Array.isArray(j.data) ? j.data : [],
+    included: Array.isArray(j.included) ? j.included : []
+  };
+}
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -112,7 +129,40 @@ module.exports = async function handler(req, res) {
       allPools.push(...pagePools);
       if (pagePools.length < 20) break;
     }
+    // Discover additional Robinhood stock-token pools that may not appear
+    // in GeckoTerminal's first ranked network pages.
+    const seenTokenAddresses = new Set();
 
+    for (const pool of allPools) {
+      const baseId = pool?.relationships?.base_token?.data?.id || '';
+      const quoteId = pool?.relationships?.quote_token?.data?.id || '';
+
+      const baseAddress = extractAddress(baseId);
+      const quoteAddress = extractAddress(quoteId);
+
+      if (baseAddress) seenTokenAddresses.add(baseAddress);
+      if (quoteAddress) seenTokenAddresses.add(quoteAddress);
+    }
+
+    const missingStockAddresses = [...stockByAddress.keys()]
+      .filter(address => !seenTokenAddresses.has(address))
+      .slice(0, 4);
+
+    for (const tokenAddress of missingStockAddresses) {
+      const extra = await fetchTokenPools(tokenAddress);
+
+      for (const item of extra.included) {
+        includedById.set(item.id, item);
+      }
+
+      for (const pool of extra.data) {
+        if (!allPools.some(existing => existing.id === pool.id)) {
+          allPools.push(pool);
+        }
+      }
+    }
+
+    
     const preliminary = allPools.map(pool => {
       const pa = pool.attributes || {};
       const baseId = pool?.relationships?.base_token?.data?.id || '';

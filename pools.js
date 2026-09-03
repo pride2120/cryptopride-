@@ -348,6 +348,7 @@ let extraPoolsDiscovered = 0;
         poolCount: tagged.length,
         stockPoolCount,
         robinhoodStockTokens: stockByAddress.size,
+        extraPoolsDiscovered,
         chainId: 4663
       }
     });

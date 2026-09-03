@@ -146,8 +146,8 @@ module.exports = async function handler(req, res) {
 
     const missingStockAddresses = [...stockByAddress.keys()]
       .filter(address => !seenTokenAddresses.has(address))
-      .slice(0, 4);
-
+      .slice(0, 10);
+let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {
       const extra = await fetchTokenPools(tokenAddress);
 
@@ -157,11 +157,12 @@ module.exports = async function handler(req, res) {
 
       for (const pool of extra.data) {
         if (!allPools.some(existing => existing.id === pool.id)) {
-          allPools.push(pool);
+  allPools.push(pool);
+  extraPoolsDiscovered++;
+}
         }
       }
-    }
-
+    
     
     const preliminary = allPools.map(pool => {
       const pa = pool.attributes || {};

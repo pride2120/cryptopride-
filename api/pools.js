@@ -455,6 +455,7 @@ let onChainStateCount = 0;
 const onChainBuiltPools = [];
 let onChainPricedRatioCount = 0;
     let onChainBaseStockCount = 0;
+    let onChainActiveLiquidityCount = 0;
 let onChainQuoteStockCount = 0;
 for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(discovered.pool).catch(() => null);
@@ -472,7 +473,9 @@ state.stockSide = stockByAddress.has(state.token0)
   : stockByAddress.has(state.token1)
     ? 'quote'
     : '';
-
+if (BigInt(state.liquidity || '0') > 0n) {
+  onChainActiveLiquidityCount++;
+}
 if (state.stockSide === 'base') {
   onChainBaseStockCount++;
 }
@@ -732,6 +735,7 @@ let extraPoolsDiscovered = 0;
         onChainPricedRatioCount,
         onChainBaseStockCount,
 onChainQuoteStockCount,
+        onChainActiveLiquidityCount,
         onChainPoolsAdded,
         onChainDuplicateCount,
         chainId: 4663

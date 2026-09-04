@@ -613,7 +613,17 @@ let extraPoolsDiscovered = 0;
       const focusSymbol = focusSide === 'quote' ? quoteSymbol : baseSymbol;
       const basePrice = goodPrice(pa.base_token_price_usd);
       const derivedFocus = deriveFocusPrice(pa, focusSide);
-      const focusPrice = derivedFocus || basePrice;
+      let focusPrice = derivedFocus || basePrice;
+      const pairSymbol = focusSide === 'base' ? quoteSymbol : baseSymbol;
+
+if (
+  pa.on_chain_only &&
+  BigInt(pa.on_chain_liquidity || '0') > 0n &&
+  isStableSymbol(pairSymbol) &&
+  Number(pa.on_chain_stock_multiplier || 1) === 1
+) {
+  focusPrice = goodPrice(pa.on_chain_stock_price_in_pair);
+}
       const rawChange = Number(pa.price_change_percentage?.h24 || 0);
       const focusChange = focusSide === 'quote' ? -rawChange : rawChange;
 

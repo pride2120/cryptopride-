@@ -413,13 +413,17 @@ const onChainStockPools = await fetchOnChainStockPools(
 );
     
     const onChainPoolCount = onChainStockPools.length;
-    let onChainStateCount = 0;
+let onChainStateCount = 0;
+const onChainBuiltPools = [];
 
 for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(discovered.pool).catch(() => null);
 
   if (state?.token0 && state?.token1) {
     onChainStateCount++;
+    onChainBuiltPools.push(
+      buildOnChainPoolRecord(discovered, state)
+    );
   }
 }
     let onChainPoolsAdded = 0;
@@ -431,15 +435,26 @@ for (const discovered of onChainStockPools) {
     includedById.set(item.id, item);
   }
 
+  const builtPool = onChainBuiltPools.find(
+    pool =>
+      String(pool?.attributes?.address || '').toLowerCase() ===
+      discovered.pool.toLowerCase()
+  );
+
+  const poolToAdd = extra.pool || builtPool || null;
+
   if (
-    extra.pool &&
-    !allPools.some(existing => existing.id === extra.pool.id)
+    poolToAdd &&
+    !allPools.some(
+      existing =>
+        extractAddress(existing.id) === discovered.pool.toLowerCase() ||
+        extractAddress(existing?.attributes?.address) === discovered.pool.toLowerCase()
+    )
   ) {
-    allPools.push(extra.pool);
+    allPools.push(poolToAdd);
     onChainPoolsAdded++;
   }
 }
-
   
 let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {

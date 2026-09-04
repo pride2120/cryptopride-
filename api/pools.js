@@ -207,6 +207,25 @@ async function fetchTokenPools(tokenAddress) {
     included: Array.isArray(j.included) ? j.included : []
   };
 }
+async function fetchPoolByAddress(poolAddress) {
+  const url = `${GT_BASE}/${poolAddress}?include=base_token,quote_token,dex`;
+
+  const r = await fetch(url, {
+    headers: {
+      accept: 'application/json;version=20230203',
+      'user-agent': 'CryptoPride-Range-Lab/6.0'
+    }
+  });
+
+  if (!r.ok) return { pool: null, included: [] };
+
+  const j = await r.json();
+
+  return {
+    pool: j?.data || null,
+    included: Array.isArray(j?.included) ? j.included : []
+  };
+}
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');

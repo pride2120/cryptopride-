@@ -348,17 +348,18 @@ const onChainStockPools = await fetchOnChainStockPools(
     const onChainPoolCount = onChainStockPools.length;
     let onChainPoolsAdded = 0;
 
-const multi = await fetchPoolsByAddresses(
-  onChainStockPools.map(item => item.pool)
-);
+for (const discovered of onChainStockPools) {
+  const extra = await fetchPoolByAddress(discovered.pool);
 
-for (const item of multi.included) {
-  includedById.set(item.id, item);
-}
+  for (const item of extra.included) {
+    includedById.set(item.id, item);
+  }
 
-for (const pool of multi.data) {
-  if (!allPools.some(existing => existing.id === pool.id)) {
-    allPools.push(pool);
+  if (
+    extra.pool &&
+    !allPools.some(existing => existing.id === extra.pool.id)
+  ) {
+    allPools.push(extra.pool);
     onChainPoolsAdded++;
   }
 }

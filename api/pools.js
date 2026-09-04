@@ -96,7 +96,27 @@ async function factoryGetPool(tokenA, tokenB, fee) {
 
   return decodeAddressWord(result);
 }
+async function poolEthCall(poolAddress, selector) {
+  return rpc('eth_call', [{
+    to: poolAddress,
+    data: selector
+  }, 'latest']);
+}
+async function readOnChainPoolState(poolAddress) {
+  const [token0Raw, token1Raw, feeRaw, liquidityRaw] = await Promise.all([
+    poolEthCall(poolAddress, '0x0dfe1681'),
+    poolEthCall(poolAddress, '0xd21220a7'),
+    poolEthCall(poolAddress, '0xddca3f43'),
+    poolEthCall(poolAddress, '0x1a686502')
+  ]);
 
+  return {
+    token0: decodeAddressWord(token0Raw),
+    token1: decodeAddressWord(token1Raw),
+    fee: Number(BigInt(feeRaw || '0x0')),
+    liquidity: BigInt(liquidityRaw || '0x0').toString()
+  };
+}
 async function fetchOnChainStockPools(
   stockAddresses,
   candidateTokenAddresses = []
@@ -346,6 +366,15 @@ const onChainStockPools = await fetchOnChainStockPools(
 );
     
     const onChainPoolCount = onChainStockPools.length;
+    let onChainStateCount = 0;
+
+for (const discovered of onChainStockPools) {
+  const state = await readOnChainPoolState(discovered.pool).catch(() => null);
+
+  if (state?.token0 && state?.token1) {
+    onChainStateCount++;
+  }
+}
     let onChainPoolsAdded = 0;
 
 for (const discovered of onChainStockPools) {
@@ -568,6 +597,7 @@ let extraPoolsDiscovered = 0;
         robinhoodStockTokens: stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,
+        onChainStateCount,
         onChainPoolsAdded,
         chainId: 4663
       }

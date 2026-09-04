@@ -146,6 +146,12 @@ async function readTokenDecimals(tokenAddress) {
 function buildOnChainPoolRecord(discovered, state) {
   const token0Id = `robinhood_${state.token0}`;
   const token1Id = `robinhood_${state.token1}`;
+  const pairTokenAddress =
+  state.stockSide === 'base'
+    ? state.token1
+    : state.stockSide === 'quote'
+      ? state.token0
+      : '';
 const rawRatio = sqrtPriceX96ToRawRatio(state.sqrtPriceX96);
 const decimalAdjustedRatio =
   rawRatio * (10 ** (state.token0Decimals - state.token1Decimals));
@@ -184,7 +190,8 @@ const decimalAdjustedRatio =
       raw_token_ratio: rawRatio,
 decimal_adjusted_ratio: decimalAdjustedRatio,
     on_chain_stock_side: state.stockSide,
-on_chain_stock_price_in_pair: stockPriceInPair
+on_chain_stock_price_in_pair: stockPriceInPair,
+on_chain_pair_token_address: pairTokenAddress
 },
     relationships: {
       base_token: {

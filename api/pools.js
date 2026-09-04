@@ -23,8 +23,9 @@ async function rpc(method, params = []) {
   });
 
   if (!response.ok) {
-    throw new Error(`Robinhood RPC HTTP ${response.status}`);
-  }
+  const detail = await response.text();
+  throw new Error(`Robinhood RPC HTTP ${response.status}: ${detail.slice(0, 500)}`);
+}
 
   const json = await response.json();
 

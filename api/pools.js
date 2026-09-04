@@ -253,6 +253,7 @@ async function fetchPoolsByAddresses(poolAddresses) {
     included: Array.isArray(j?.included) ? j.included : []
   };
 }
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -362,14 +363,7 @@ for (const pool of multi.data) {
   }
 }
 
-  if (
-    extra.pool &&
-    !allPools.some(existing => existing.id === extra.pool.id)
-  ) {
-    allPools.push(extra.pool);
-    onChainPoolsAdded++;
-  }
-}
+  
 let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {
       const extra = await fetchTokenPools(tokenAddress);

@@ -80,12 +80,12 @@ async function fetchOnChainStockPools(stockAddresses) {
     rpc('eth_getLogs', [{
       ...filterBase,
       topics: [POOL_CREATED_TOPIC, topics]
-    }]).catch(() => []),
+    }]),
 
     rpc('eth_getLogs', [{
       ...filterBase,
       topics: [POOL_CREATED_TOPIC, null, topics]
-    }]).catch(() => [])
+    }])
   ]);
 
   const unique = new Map();
@@ -215,7 +215,7 @@ module.exports = async function handler(req, res) {
     const includedById = new Map();
 const onChainStockPools = await fetchOnChainStockPools(
   [...stockByAddress.keys()]
-).catch(() => []);
+);
     for (let page = 1; page <= pagesRequested; page++) {
       const url = `${GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
       const response = await fetch(url, {

@@ -509,7 +509,12 @@ for (const discovered of onChainStockPools) {
       discovered.pool.toLowerCase()
   );
 
-  const poolToAdd = extra.pool || builtPool || null;
+  const hasActiveLiquidity =
+  BigInt(builtPool?.attributes?.on_chain_liquidity || '0') > 0n;
+
+const poolToAdd = hasActiveLiquidity
+  ? (extra.pool || builtPool || null)
+  : null;
 const alreadyExists = allPools.some(
   existing =>
     extractAddress(existing.id) === discovered.pool.toLowerCase() ||

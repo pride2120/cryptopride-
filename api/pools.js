@@ -176,8 +176,9 @@ const decimalAdjustedRatio =
       on_chain_liquidity: state.liquidity,
       fee_tier: state.fee,
       raw_token_ratio: rawRatio,
-decimal_adjusted_ratio: decimalAdjustedRatio
-    },
+decimal_adjusted_ratio: decimalAdjustedRatio,
+    on_chain_stock_side: state.stockSide
+      },
     relationships: {
       base_token: {
         data: {
@@ -457,8 +458,12 @@ for (const discovered of onChainStockPools) {
 
     state.token0Decimals = token0Decimals;
     state.token1Decimals = token1Decimals;
-
-    onChainStateCount++;
+state.stockSide = stockByAddress.has(state.token0)
+  ? 'base'
+  : stockByAddress.has(state.token1)
+    ? 'quote'
+    : '';
+        onChainStateCount++;
     onChainBuiltPools.push(
       buildOnChainPoolRecord(discovered, state)
     );

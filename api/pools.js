@@ -700,7 +700,7 @@ if (
       const basePrice = goodPrice(a.debug_base_price_usd);
       const liq = Number(a.reserve_in_usd || 0);
       const address = extractAddress(pool.id) || extractAddress(a.address);
-      if (!address || !base || isStableSymbol(base) || !isStableSymbol(quote) || basePrice <= 1.5) continue;
+      if (!address || !base || isStableSymbol(base) || !isStableSymbol(quote) || basePrice <= 1.5 || String(pool?.relationships?.dex?.data?.id || '').includes('uniswap-v4')) continue;
       const prev = historyReference.get(base);
       if (!prev || liq > prev.liquidity) {
         historyReference.set(base, { address, side: 'base', liquidity: liq, price: basePrice, name: a.name || '' });

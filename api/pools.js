@@ -64,48 +64,77 @@ function decodePoolCreatedLog(log) {
     pool
   };
 }
-async function fetchOnChainStockPools(stockAddresses) {
-  const topics = stockAddresses
-    .filter(Boolean)
-    .map(addressTopic);
+function encodeAddressWord(address) {
+  return String(address || '')
+    .toLowerCase()
+    .replace(/^0x/, '')
+    .padStart(64, '0');
+}
 
-  if (!topics.length) return [];
+function encodeUintWord(value) {
+  return BigInt(value).toString(16).padStart(64, '0');
+}
 
-  const filterBase = {
-    fromBlock: '0x0',
-    toBlock: 'latest',
-    address: UNISWAP_V3_FACTORY
-  };
+function decodeAddressWord(value) {
+  const clean = String(value || '').replace(/^0x/, '');
+  if (clean.length < 64) return '';
+  const address = `0x${clean.slice(-40)}`.toLowerCase();
+  return /^0x0{40}$/.test(address) ? '' : address;
+}
 
-  const asToken0 = await rpc('eth_getLogs', [{
-  ...filterBase,
-  topics: [POOL_CREATED_TOPIC, topics]
-}]);
+async function factoryGetPool(tokenA, tokenB, fee) {
+  const data =
+    '0x1698ee82' +
+    encodeAddressWord(tokenA) +
+    encodeAddressWord(tokenB) +
+    encodeUintWord(fee);
 
-await new Promise(resolve => setTimeout(resolve, 750));
+  const result = await rpc('eth_call', [{
+    to: UNISWAP_V3_FACTORY,
+    data
+  }, 'latest']);
 
-const asToken1 = await rpc('eth_getLogs', [{
-  ...filterBase,
-  topics: [POOL_CREATED_TOPIC, null, topics]
-}]);
+  return decodeAddressWord(result);
+}
 
+async function fetchOnChainStockPools(
+  stockAddresses,
+  candidateTokenAddresses = []
+) {
+  const fees = [100, 200, 460, 500, 3000, 9000, 10000];
   const unique = new Map();
 
-  for (const log of [...asToken0, ...asToken1]) {
-    const decoded = decodePoolCreatedLog(log);
+  if (!candidateTokenAddresses.length) return [];
 
-    if (
-      decoded.pool &&
-      decoded.token0 &&
-      decoded.token1
-    ) {
-      unique.set(decoded.pool, decoded);
+  for (const stockAddress of stockAddresses) {
+    for (const otherAddress of candidateTokenAddresses) {
+      if (
+        !stockAddress ||
+        !otherAddress ||
+        stockAddress.toLowerCase() === otherAddress.toLowerCase()
+      ) continue;
+
+      for (const fee of fees) {
+        const pool = await factoryGetPool(
+          stockAddress,
+          otherAddress,
+          fee
+        ).catch(() => '');
+
+        if (pool) {
+          unique.set(pool, {
+            pool,
+            token0: stockAddress.toLowerCase(),
+            token1: otherAddress.toLowerCase(),
+            fee
+          });
+        }
+      }
     }
   }
 
   return [...unique.values()];
 }
-
 function extractAddress(value) {
   const m = String(value || '').match(/0x[a-fA-F0-9]{40}/);
   return m ? m[0].toLowerCase() : '';
@@ -214,9 +243,7 @@ module.exports = async function handler(req, res) {
 
     const allPools = [];
     const includedById = new Map();
-const onChainStockPools = await fetchOnChainStockPools(
-  [...stockByAddress.keys()]
-);
+
     for (let page = 1; page <= pagesRequested; page++) {
       const url = `${GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
       const response = await fetch(url, {
@@ -236,7 +263,7 @@ const onChainStockPools = await fetchOnChainStockPools(
       allPools.push(...pagePools);
       if (pagePools.length < 20) break;
     }
-    const onChainPoolCount = onChainStockPools.length;
+    
     // Discover additional Robinhood stock-token pools that may not appear
     // in GeckoTerminal's first ranked network pages.
     const seenTokenAddresses = new Set();
@@ -255,6 +282,22 @@ const onChainStockPools = await fetchOnChainStockPools(
     const missingStockAddresses = [...stockByAddress.keys()]
       .filter(address => !seenTokenAddresses.has(address))
       .slice(0, 10);
+    const candidateTokenAddresses = [...new Set(
+  [...includedById.values()]
+    .filter(item => ['WETH', 'USDG', 'USDC'].includes(
+      String(item?.attributes?.symbol || '').toUpperCase()
+    ))
+    .map(item =>
+      extractAddress(item?.id) ||
+      extractAddress(item?.attributes?.address)
+    )
+    .filter(Boolean)
+)];
+const onChainStockPools = await fetchOnChainStockPools(
+  missingStockAddresses,
+  candidateTokenAddresses
+);
+    const onChainPoolCount = onChainStockPools.length;
 let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {
       const extra = await fetchTokenPools(tokenAddress);

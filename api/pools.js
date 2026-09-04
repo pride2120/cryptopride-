@@ -191,7 +191,8 @@ const decimalAdjustedRatio =
 decimal_adjusted_ratio: decimalAdjustedRatio,
     on_chain_stock_side: state.stockSide,
 on_chain_stock_price_in_pair: stockPriceInPair,
-on_chain_pair_token_address: pairTokenAddress
+on_chain_pair_token_address: pairTokenAddress,
+on_chain_stock_multiplier: state.stockMultiplier
 },
     relationships: {
       base_token: {
@@ -480,6 +481,14 @@ state.stockSide = stockByAddress.has(state.token0)
   : stockByAddress.has(state.token1)
     ? 'quote'
     : '';
+    const stockAsset =
+  state.stockSide === 'base'
+    ? stockByAddress.get(state.token0)
+    : state.stockSide === 'quote'
+      ? stockByAddress.get(state.token1)
+      : null;
+
+state.stockMultiplier = Number(stockAsset?.multiplier || 1);
 if (BigInt(state.liquidity || '0') > 0n) {
   onChainActiveLiquidityCount++;
 }

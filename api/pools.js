@@ -117,6 +117,53 @@ async function readOnChainPoolState(poolAddress) {
     liquidity: BigInt(liquidityRaw || '0x0').toString()
   };
 }
+function buildOnChainPoolRecord(discovered, state) {
+  const token0Id = `robinhood_${state.token0}`;
+  const token1Id = `robinhood_${state.token1}`;
+
+  return {
+    id: `robinhood_${discovered.pool}`,
+    type: 'pool',
+    attributes: {
+      address: discovered.pool,
+      name: `On-chain pool ${state.fee}`,
+      reserve_in_usd: '0',
+      volume_usd: {
+        m5: '0',
+        m15: '0',
+        m30: '0',
+        h1: '0',
+        h6: '0',
+        h24: '0'
+      },
+      price_change_percentage: {
+        m5: '0',
+        m15: '0',
+        m30: '0',
+        h1: '0',
+        h6: '0',
+        h24: '0'
+      },
+      on_chain_only: true,
+      on_chain_liquidity: state.liquidity,
+      fee_tier: state.fee
+    },
+    relationships: {
+      base_token: {
+        data: {
+          id: token0Id,
+          type: 'token'
+        }
+      },
+      quote_token: {
+        data: {
+          id: token1Id,
+          type: 'token'
+        }
+      }
+    }
+  };
+}
 async function fetchOnChainStockPools(
   stockAddresses,
   candidateTokenAddresses = []

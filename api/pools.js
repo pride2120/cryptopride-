@@ -1,7 +1,7 @@
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';
 const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/tokens';
-const RH_RPC = 'https://rpc.mainnet.chain.robinhood.com';
+const RH_RPC = 'https://robinhood-mainnet.g.alchemy.com/v2/YOUR_API_KEY';
 const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';
 
   const POOL_CREATED_TOPIC =

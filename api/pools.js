@@ -146,7 +146,9 @@ async function readTokenDecimals(tokenAddress) {
 function buildOnChainPoolRecord(discovered, state) {
   const token0Id = `robinhood_${state.token0}`;
   const token1Id = `robinhood_${state.token1}`;
-
+const rawRatio = sqrtPriceX96ToRawRatio(state.sqrtPriceX96);
+const decimalAdjustedRatio =
+  rawRatio * (10 ** (state.token0Decimals - state.token1Decimals));
   return {
     id: `robinhood_${discovered.pool}`,
     type: 'pool',
@@ -172,7 +174,9 @@ function buildOnChainPoolRecord(discovered, state) {
       },
       on_chain_only: true,
       on_chain_liquidity: state.liquidity,
-      fee_tier: state.fee
+      fee_tier: state.fee,
+      raw_token_ratio: rawRatio,
+decimal_adjusted_ratio: decimalAdjustedRatio
     },
     relationships: {
       base_token: {

@@ -183,8 +183,9 @@ const decimalAdjustedRatio =
       fee_tier: state.fee,
       raw_token_ratio: rawRatio,
 decimal_adjusted_ratio: decimalAdjustedRatio,
-    on_chain_stock_side: state.stockSide
-      },
+    on_chain_stock_side: state.stockSide,
+on_chain_stock_price_in_pair: stockPriceInPair
+},
     relationships: {
       base_token: {
         data: {

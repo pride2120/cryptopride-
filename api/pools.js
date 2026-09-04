@@ -427,7 +427,7 @@ for (const discovered of onChainStockPools) {
   }
 }
     let onChainPoolsAdded = 0;
-
+let onChainDuplicateCount = 0;
 for (const discovered of onChainStockPools) {
   const extra = await fetchPoolByAddress(discovered.pool);
 
@@ -442,15 +442,19 @@ for (const discovered of onChainStockPools) {
   );
 
   const poolToAdd = extra.pool || builtPool || null;
+const alreadyExists = allPools.some(
+  existing =>
+    extractAddress(existing.id) === discovered.pool.toLowerCase() ||
+    extractAddress(existing?.attributes?.address) === discovered.pool.toLowerCase()
+);
 
+if (alreadyExists) {
+  onChainDuplicateCount++;
+}
   if (
-    poolToAdd &&
-    !allPools.some(
-      existing =>
-        extractAddress(existing.id) === discovered.pool.toLowerCase() ||
-        extractAddress(existing?.attributes?.address) === discovered.pool.toLowerCase()
-    )
-  ) {
+  poolToAdd &&
+  !alreadyExists
+) {
     allPools.push(poolToAdd);
     onChainPoolsAdded++;
   }
@@ -661,6 +665,7 @@ let extraPoolsDiscovered = 0;
         onChainPoolCount,
         onChainStateCount,
         onChainPoolsAdded,
+        onChainDuplicateCount,
         chainId: 4663
       }
     });

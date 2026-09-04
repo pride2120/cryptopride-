@@ -226,6 +226,33 @@ async function fetchPoolByAddress(poolAddress) {
     included: Array.isArray(j?.included) ? j.included : []
   };
 }
+async function fetchPoolsByAddresses(poolAddresses) {
+  const addresses = poolAddresses.filter(Boolean).join(',');
+
+  if (!addresses) {
+    return { data: [], included: [] };
+  }
+
+  const url = `${GT_BASE}/multi/${addresses}?include=base_token,quote_token,dex`;
+
+  const r = await fetch(url, {
+    headers: {
+      accept: 'application/json;version=20230203',
+      'user-agent': 'CryptoPride-Range-Lab/6.0'
+    }
+  });
+
+  if (!r.ok) {
+    return { data: [], included: [] };
+  }
+
+  const j = await r.json();
+
+  return {
+    data: Array.isArray(j?.data) ? j.data : [],
+    included: Array.isArray(j?.included) ? j.included : []
+  };
+}
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -320,12 +347,20 @@ const onChainStockPools = await fetchOnChainStockPools(
     const onChainPoolCount = onChainStockPools.length;
     let onChainPoolsAdded = 0;
 
-for (const discovered of onChainStockPools) {
-  const extra = await fetchPoolByAddress(discovered.pool);
+const multi = await fetchPoolsByAddresses(
+  onChainStockPools.map(item => item.pool)
+);
 
-  for (const item of extra.included) {
-    includedById.set(item.id, item);
+for (const item of multi.included) {
+  includedById.set(item.id, item);
+}
+
+for (const pool of multi.data) {
+  if (!allPools.some(existing => existing.id === pool.id)) {
+    allPools.push(pool);
+    onChainPoolsAdded++;
   }
+}
 
   if (
     extra.pool &&

@@ -149,6 +149,12 @@ function buildOnChainPoolRecord(discovered, state) {
 const rawRatio = sqrtPriceX96ToRawRatio(state.sqrtPriceX96);
 const decimalAdjustedRatio =
   rawRatio * (10 ** (state.token0Decimals - state.token1Decimals));
+  const stockPriceInPair =
+  state.stockSide === 'base'
+    ? decimalAdjustedRatio
+    : state.stockSide === 'quote' && decimalAdjustedRatio > 0
+      ? 1 / decimalAdjustedRatio
+      : 0;
   return {
     id: `robinhood_${discovered.pool}`,
     type: 'pool',

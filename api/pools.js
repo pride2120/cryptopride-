@@ -235,6 +235,7 @@ const onChainStockPools = await fetchOnChainStockPools(
       allPools.push(...pagePools);
       if (pagePools.length < 20) break;
     }
+    const onChainPoolCount = onChainStockPools.length;
     // Discover additional Robinhood stock-token pools that may not appear
     // in GeckoTerminal's first ranked network pages.
     const seenTokenAddresses = new Set();
@@ -455,6 +456,7 @@ let extraPoolsDiscovered = 0;
         stockPoolCount,
         robinhoodStockTokens: stockByAddress.size,
         extraPoolsDiscovered,
+        onChainPoolCount,
         chainId: 4663
       }
     });

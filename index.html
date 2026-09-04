@@ -249,6 +249,7 @@ async function selectPool(id){
   try{
     $('dataStatus').textContent='Loading history';
     const a=attrs(selected),address=a.history_pool_address||poolAddress(selected);
+    if(a.on_chain_only&&!a.history_reference_symbol){candles=[];$('dataStatus').textContent='Live · on-chain price only';renderCalc();return;}
     if(!address)throw new Error('Pool address unavailable');
     const focusSymbol=poolFocusSymbol(selected);
 const baseSymbol=String(a.base_token_symbol||'').toUpperCase();

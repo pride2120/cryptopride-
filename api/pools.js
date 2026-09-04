@@ -445,7 +445,7 @@ const onChainStockPools = await fetchOnChainStockPools(
     const onChainPoolCount = onChainStockPools.length;
 let onChainStateCount = 0;
 const onChainBuiltPools = [];
-
+let onChainPricedRatioCount = 0;
 for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(discovered.pool).catch(() => null);
 
@@ -462,6 +462,11 @@ for (const discovered of onChainStockPools) {
     onChainBuiltPools.push(
       buildOnChainPoolRecord(discovered, state)
     );
+    const built = onChainBuiltPools[onChainBuiltPools.length - 1];
+
+if (built?.attributes?.decimal_adjusted_ratio > 0) {
+  onChainPricedRatioCount++;
+}
   }
 }
     let onChainPoolsAdded = 0;
@@ -702,6 +707,7 @@ let extraPoolsDiscovered = 0;
         extraPoolsDiscovered,
         onChainPoolCount,
         onChainStateCount,
+        onChainPricedRatioCount,
         onChainPoolsAdded,
         onChainDuplicateCount,
         chainId: 4663

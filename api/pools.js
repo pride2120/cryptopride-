@@ -316,7 +316,25 @@ const onChainStockPools = await fetchOnChainStockPools(
   missingStockAddresses,
   candidateTokenAddresses
 );
+    
     const onChainPoolCount = onChainStockPools.length;
+    let onChainPoolsAdded = 0;
+
+for (const discovered of onChainStockPools) {
+  const extra = await fetchPoolByAddress(discovered.pool);
+
+  for (const item of extra.included) {
+    includedById.set(item.id, item);
+  }
+
+  if (
+    extra.pool &&
+    !allPools.some(existing => existing.id === extra.pool.id)
+  ) {
+    allPools.push(extra.pool);
+    onChainPoolsAdded++;
+  }
+}
 let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {
       const extra = await fetchTokenPools(tokenAddress);

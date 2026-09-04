@@ -76,17 +76,17 @@ async function fetchOnChainStockPools(stockAddresses) {
     address: UNISWAP_V3_FACTORY
   };
 
-  const [asToken0, asToken1] = await Promise.all([
-    rpc('eth_getLogs', [{
-      ...filterBase,
-      topics: [POOL_CREATED_TOPIC, topics]
-    }]),
+  const asToken0 = await rpc('eth_getLogs', [{
+  ...filterBase,
+  topics: [POOL_CREATED_TOPIC, topics]
+}]);
 
-    rpc('eth_getLogs', [{
-      ...filterBase,
-      topics: [POOL_CREATED_TOPIC, null, topics]
-    }])
-  ]);
+await new Promise(resolve => setTimeout(resolve, 750));
+
+const asToken1 = await rpc('eth_getLogs', [{
+  ...filterBase,
+  topics: [POOL_CREATED_TOPIC, null, topics]
+}]);
 
   const unique = new Map();
 

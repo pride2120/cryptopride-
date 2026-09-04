@@ -103,19 +103,45 @@ async function poolEthCall(poolAddress, selector) {
   }, 'latest']);
 }
 async function readOnChainPoolState(poolAddress) {
-  const [token0Raw, token1Raw, feeRaw, liquidityRaw] = await Promise.all([
-    poolEthCall(poolAddress, '0x0dfe1681'),
-    poolEthCall(poolAddress, '0xd21220a7'),
-    poolEthCall(poolAddress, '0xddca3f43'),
-    poolEthCall(poolAddress, '0x1a686502')
-  ]);
-
+  const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([
+  poolEthCall(poolAddress, '0x0dfe1681'),
+  poolEthCall(poolAddress, '0xd21220a7'),
+  poolEthCall(poolAddress, '0xddca3f43'),
+  poolEthCall(poolAddress, '0x1a686502'),
+  poolEthCall(poolAddress, '0x3850c7bd')
+]);
+const slot0Clean = String(slot0Raw || '').replace(/^0x/, '');
+const sqrtPriceX96 = slot0Clean.length >= 64
+  ? BigInt(`0x${slot0Clean.slice(0, 64)}`).toString()
+  : '0';
   return {
     token0: decodeAddressWord(token0Raw),
     token1: decodeAddressWord(token1Raw),
     fee: Number(BigInt(feeRaw || '0x0')),
-    liquidity: BigInt(liquidityRaw || '0x0').toString()
+    liquidity: BigInt(liquidityRaw || '0x0').toString(),
+    sqrtPriceX96
   };
+}
+function sqrtPriceX96ToRawRatio(sqrtPriceX96) {
+  const sqrt = Number(sqrtPriceX96 || 0);
+
+  if (!Number.isFinite(sqrt) || sqrt <= 0) {
+    return 0;
+  }
+
+  const q96 = 2 ** 96;
+  const ratio = (sqrt / q96) ** 2;
+
+  return Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
+}
+async function readTokenDecimals(tokenAddress) {
+  const raw = await poolEthCall(tokenAddress, '0x313ce567').catch(() => '0x0');
+
+  try {
+    return Number(BigInt(raw || '0x0'));
+  } catch {
+    return 18;
+  }
 }
 function buildOnChainPoolRecord(discovered, state) {
   const token0Id = `robinhood_${state.token0}`;
@@ -420,6 +446,14 @@ for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(discovered.pool).catch(() => null);
 
   if (state?.token0 && state?.token1) {
+    const [token0Decimals, token1Decimals] = await Promise.all([
+      readTokenDecimals(state.token0),
+      readTokenDecimals(state.token1)
+    ]);
+
+    state.token0Decimals = token0Decimals;
+    state.token1Decimals = token1Decimals;
+
     onChainStateCount++;
     onChainBuiltPools.push(
       buildOnChainPoolRecord(discovered, state)

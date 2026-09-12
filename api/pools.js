@@ -138,8 +138,8 @@ function sqrtPriceX96ToRawRatio(sqrtPriceX96) {
 
   return Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
 }
-async function readTokenDecimals(tokenAddress) {
-  const raw = await poolEthCall(tokenAddress, '0x313ce567').catch(() => '0x0');
+async function readTokenDecimals(tokenAddress, rpcUrl = RH_RPC) {
+  const raw = await poolEthCall(tokenAddress, '0x313ce567', rpcUrl).catch(() => '0x0');
 
   try {
     return Number(BigInt(raw || '0x0'));
@@ -216,7 +216,9 @@ on_chain_stock_multiplier: state.stockMultiplier
 }
 async function fetchOnChainStockPools(
   stockAddresses,
-  candidateTokenAddresses = []
+  candidateTokenAddresses = [],
+  factoryAddress = UNISWAP_V3_FACTORY,
+  rpcUrl = RH_RPC
 ) {
   const fees = [100, 200, 460, 500, 3000, 9000, 10000];
   const unique = new Map();
@@ -232,11 +234,13 @@ async function fetchOnChainStockPools(
       ) continue;
 
       for (const fee of fees) {
-        const pool = await factoryGetPool(
-          stockAddress,
-          otherAddress,
-          fee
-        ).catch(() => '');
+    const pool = await factoryGetPool(
+  stockAddress,
+  otherAddress,
+  fee,
+  factoryAddress,
+  rpcUrl
+).catch(() => '');    
 
         if (pool) {
           unique.set(pool, {

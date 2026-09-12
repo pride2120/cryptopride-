@@ -2,6 +2,9 @@ const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';
 const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/tokens';
 const RH_RPC = process.env.RH_RPC || 'https://rpc.mainnet.chain.robinhood.com';
+const BASE_CHAIN_ID = 8453;
+const BASE_GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/base/pools';
+const BASE_UNISWAP_V3_FACTORY = '0x33128a8fC17869897dcE68Ed026d694621f6FDfD';
 const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';
 
   const POOL_CREATED_TOPIC =
@@ -374,7 +377,7 @@ module.exports = async function handler(req, res) {
   }
 
   const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 8), 1), 20);
-
+const chain = String(req.query?.chain || 'robinhood').toLowerCase();
   try {
     const assetsResp = await fetch(RH_ASSETS, {
       headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/6.0' }

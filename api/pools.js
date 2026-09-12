@@ -492,7 +492,9 @@ if (isBase) {
 )];
 const onChainStockPools = await fetchOnChainStockPools(
   missingStockAddresses,
-  candidateTokenAddresses
+  candidateTokenAddresses,
+  isBase ? BASE_UNISWAP_V3_FACTORY : UNISWAP_V3_FACTORY,
+  isBase ? BASE_RPC : RH_RPC
 );
     
     const onChainPoolCount = onChainStockPools.length;
@@ -503,12 +505,15 @@ let onChainPricedRatioCount = 0;
     let onChainActiveLiquidityCount = 0;
 let onChainQuoteStockCount = 0;
 for (const discovered of onChainStockPools) {
-  const state = await readOnChainPoolState(discovered.pool).catch(() => null);
+  const state = await readOnChainPoolState(
+  discovered.pool,
+  isBase ? BASE_RPC : RH_RPC
+).catch(() => null);
 
   if (state?.token0 && state?.token1) {
     const [token0Decimals, token1Decimals] = await Promise.all([
-      readTokenDecimals(state.token0),
-      readTokenDecimals(state.token1)
+      readTokenDecimals(state.token0, isBase ? BASE_RPC : RH_RPC),
+readTokenDecimals(state.token1, isBase ? BASE_RPC : RH_RPC)
     ]);
 
     state.token0Decimals = token0Decimals;

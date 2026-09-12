@@ -323,8 +323,8 @@ function deriveFocusPrice(pa, side) {
   if (baseUsd && baseInQuote) return baseUsd / baseInQuote;
   return 0;
 }
-async function fetchTokenPools(tokenAddress) {
-  const url = `${GT_TOKEN_POOLS}/${tokenAddress}/pools?include=base_token,quote_token,dex`;
+async function fetchTokenPools(tokenAddress, tokenPoolsBase = GT_TOKEN_POOLS) {
+  const url = `${tokenPoolsBase}/${tokenAddress}/pools?include=base_token,quote_token,dex`;
   const r = await fetch(url, {
     headers: {
       accept: 'application/json;version=20230203',

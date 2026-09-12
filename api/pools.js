@@ -86,7 +86,7 @@ function decodeAddressWord(value) {
   return /^0x0{40}$/.test(address) ? '' : address;
 }
 
-async function factoryGetPool(tokenA, tokenB, fee) {
+async function factoryGetPool(tokenA, tokenB, fee, factoryAddress = UNISWAP_V3_FACTORY, rpcUrl = RH_RPC) {
   const data =
     '0x1698ee82' +
     encodeAddressWord(tokenA) +
@@ -94,9 +94,9 @@ async function factoryGetPool(tokenA, tokenB, fee) {
     encodeUintWord(fee);
 
   const result = await rpc('eth_call', [{
-    to: UNISWAP_V3_FACTORY,
+    to: factoryAddress,
     data
-  }, 'latest']);
+  }, 'latest'], rpcUrl);
 
   return decodeAddressWord(result);
 }

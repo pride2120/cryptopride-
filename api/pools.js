@@ -397,12 +397,28 @@ module.exports = async function handler(req, res) {
 const chain = String(req.query?.chain || 'robinhood').toLowerCase();
   const isBase = chain === 'base';
   try {
-    const assetsResp = await fetch(RH_ASSETS, {
-      headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/6.0' }
-    });
-    if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
-    const assetsJson = await assetsResp.json();
-    const assets = Array.isArray(assetsJson.assets) ? assetsJson.assets : [];
+    let assets;
+
+if (isBase) {
+  assets = BASE_STOCK_TOKENS.map(token => ({
+    tokenSymbol: token.symbol,
+    tokenName: token.name,
+    currentMultiplier: '1',
+    deployments: [
+      {
+        chainId: BASE_CHAIN_ID,
+        contractAddress: token.address
+      }
+    ]
+  }));
+} else {
+  const assetsResp = await fetch(RH_ASSETS, {
+    headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/6.0' }
+  });
+  if (!assetsResp.ok) throw new Error(`Robinhood assets HTTP ${assetsResp.status}`);
+  const assetsJson = await assetsResp.json();
+  assets = Array.isArray(assetsJson.assets) ? assetsJson.assets : [];
+}
 
     const stockByAddress = new Map();
     const stockBySymbol = new Map();
@@ -416,7 +432,7 @@ const chain = String(req.query?.chain || 'robinhood').toLowerCase();
       };
       if (stock.symbol) stockBySymbol.set(stock.symbol, stock);
       for (const dep of asset.deployments || []) {
-        if (Number(dep.chainId) !== 4663) continue;
+        if (Number(dep.chainId) !== (isBase ? BASE_CHAIN_ID : 4663)) continue;
         const address = String(dep.contractAddress || '').toLowerCase();
         if (address) stockByAddress.set(address, stock);
       }
@@ -426,7 +442,7 @@ const chain = String(req.query?.chain || 'robinhood').toLowerCase();
     const includedById = new Map();
 
     for (let page = 1; page <= pagesRequested; page++) {
-      const url = `${GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
+      const url = `${isBase ? BASE_GT_BASE : GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
       const response = await fetch(url, {
         headers: {
           accept: 'application/json;version=20230203',

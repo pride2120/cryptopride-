@@ -395,6 +395,7 @@ module.exports = async function handler(req, res) {
 
   const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 8), 1), 20);
 const chain = String(req.query?.chain || 'robinhood').toLowerCase();
+  const isBase = chain === 'base';
   try {
     const assetsResp = await fetch(RH_ASSETS, {
       headers: { accept: 'application/json', 'user-agent': 'CryptoPride-Range-Lab/6.0' }

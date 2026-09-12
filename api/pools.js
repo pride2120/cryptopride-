@@ -594,7 +594,10 @@ if (alreadyExists) {
   
 let extraPoolsDiscovered = 0;
     for (const tokenAddress of missingStockAddresses) {
-      const extra = await fetchTokenPools(tokenAddress);
+      const extra = await fetchTokenPools(
+  tokenAddress,
+  isBase ? BASE_GT_TOKEN_POOLS : GT_TOKEN_POOLS
+);
 
       for (const item of extra.included) {
         includedById.set(item.id, item);

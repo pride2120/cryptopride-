@@ -4,6 +4,7 @@ const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/
 const RH_RPC = process.env.RH_RPC || 'https://rpc.mainnet.chain.robinhood.com';
 const BASE_CHAIN_ID = 8453;
 const BASE_GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/base/pools';
+const BASE_GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/base/tokens';
 const BASE_UNISWAP_V3_FACTORY = '0x33128a8fC17869897dcE68Ed026d694621f6FDfD';
 const BASE_RPC = process.env.BASE_RPC || 'https://mainnet.base.org';
 const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';

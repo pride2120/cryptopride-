@@ -106,14 +106,14 @@ async function poolEthCall(poolAddress, selector, rpcUrl = RH_RPC) {
     data: selector
   }, 'latest'], rpcUrl);
 }
-async function readOnChainPoolState(poolAddress) {
+async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([
-  poolEthCall(poolAddress, '0x0dfe1681'),
-  poolEthCall(poolAddress, '0xd21220a7'),
-  poolEthCall(poolAddress, '0xddca3f43'),
-  poolEthCall(poolAddress, '0x1a686502'),
-  poolEthCall(poolAddress, '0x3850c7bd')
-]);
+    poolEthCall(poolAddress, '0x0dfe1681', rpcUrl),
+    poolEthCall(poolAddress, '0xd21220a7', rpcUrl),
+    poolEthCall(poolAddress, '0xddca3f43', rpcUrl),
+    poolEthCall(poolAddress, '0x1a686502', rpcUrl),
+    poolEthCall(poolAddress, '0x3850c7bd', rpcUrl)
+  ]);
 const slot0Clean = String(slot0Raw || '').replace(/^0x/, '');
 const sqrtPriceX96 = slot0Clean.length >= 64
   ? BigInt(`0x${slot0Clean.slice(0, 64)}`).toString()

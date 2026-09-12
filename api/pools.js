@@ -7,6 +7,18 @@ const BASE_GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/base/pools';
 const BASE_UNISWAP_V3_FACTORY = '0x33128a8fC17869897dcE68Ed026d694621f6FDfD';
 const BASE_RPC = process.env.BASE_RPC || 'https://mainnet.base.org';
 const UNISWAP_V3_FACTORY = '0x1f7d7550b1b028f7571e69a784071f0205fd2efa';
+const BASE_STOCK_TOKENS = [
+  { symbol: 'NVDAc', name: 'NVIDIA', address: '0xb20000000000000000000078ee7ce2fe4908108c' },
+  { symbol: 'METAc', name: 'Meta', address: '0xb2000000000000000000008bc8786b856e61707c' },
+  { symbol: 'AAPLc', name: 'Apple', address: '0xb200000000000000000000c2e324d24d7eecd1fb' },
+  { symbol: 'GOOGLc', name: 'Alphabet', address: '0xb2000000000000000000002d0ba3164cc74f58b7' },
+  { symbol: 'AMZNc', name: 'Amazon', address: '0xb200000000000000000000d9192b6b456483c2e8' },
+  { symbol: 'MSFTc', name: 'Microsoft', address: '0xb200000000000000000000ab99cfa739e253872b' },
+  { symbol: 'MSTRc', name: 'Strategy', address: '0xb2000000000000000000004884b426556b92883d' },
+  { symbol: 'SNDKc', name: 'SanDisk', address: '0xb200000000000000000000397293cb8cda9a10c5' },
+  { symbol: 'SPCXc', name: 'SpaceX', address: '0xb2000000000000000000007b9fcbd005511acbd5' },
+  { symbol: 'TSLAc', name: 'Tesla', address: '0xb2000000000000000000001e800a7f5189430cd0' }
+];
 
   const POOL_CREATED_TOPIC =
   '0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118';

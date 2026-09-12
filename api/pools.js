@@ -341,8 +341,8 @@ async function fetchTokenPools(tokenAddress, tokenPoolsBase = GT_TOKEN_POOLS) {
     included: Array.isArray(j.included) ? j.included : []
   };
 }
-async function fetchPoolByAddress(poolAddress) {
-  const url = `${GT_BASE}/${poolAddress}?include=base_token,quote_token,dex`;
+async function fetchPoolByAddress(poolAddress, poolsBase = GT_BASE) {
+  const url = `${poolsBase}/${poolAddress}?include=base_token,quote_token,dex`;
 
   const r = await fetch(url, {
     headers: {
@@ -556,7 +556,10 @@ if (built?.attributes?.decimal_adjusted_ratio > 0) {
     let onChainPoolsAdded = 0;
 let onChainDuplicateCount = 0;
 for (const discovered of onChainStockPools) {
-  const extra = await fetchPoolByAddress(discovered.pool);
+  const extra = await fetchPoolByAddress(
+  discovered.pool,
+  isBase ? BASE_GT_BASE : GT_BASE
+);
 
   for (const item of extra.included) {
     includedById.set(item.id, item);

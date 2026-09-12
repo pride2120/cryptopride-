@@ -100,11 +100,11 @@ async function factoryGetPool(tokenA, tokenB, fee, factoryAddress = UNISWAP_V3_F
 
   return decodeAddressWord(result);
 }
-async function poolEthCall(poolAddress, selector) {
+async function poolEthCall(poolAddress, selector, rpcUrl = RH_RPC) {
   return rpc('eth_call', [{
     to: poolAddress,
     data: selector
-  }, 'latest']);
+  }, 'latest'], rpcUrl);
 }
 async function readOnChainPoolState(poolAddress) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([

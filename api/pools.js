@@ -360,14 +360,14 @@ async function fetchPoolByAddress(poolAddress, poolsBase = GT_BASE) {
     included: Array.isArray(j?.included) ? j.included : []
   };
 }
-async function fetchPoolsByAddresses(poolAddresses) {
+async function fetchPoolsByAddresses(poolAddresses, poolsBase = GT_BASE) {
   const addresses = poolAddresses.filter(Boolean).join(',');
 
   if (!addresses) {
     return { data: [], included: [] };
   }
 
-  const url = `${GT_BASE}/multi/${addresses}?include=base_token,quote_token,dex`;
+  const url = `${poolsBase}/multi/${addresses}?include=base_token,quote_token,dex`;
 
   const r = await fetch(url, {
     headers: {

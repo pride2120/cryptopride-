@@ -669,7 +669,17 @@ let extraPoolsDiscovered = 0;
       const basePrice = goodPrice(pa.base_token_price_usd);
       const derivedFocus = deriveFocusPrice(pa, focusSide);
       let focusPrice = derivedFocus || basePrice;
-      const pairSymbol = focusSide === 'base' ? quoteSymbol : baseSymbol;
+      let pairSymbol = focusSide === 'base' ? quoteSymbol : baseSymbol;
+
+if (pa.on_chain_only && !isStableSymbol(pairSymbol)) {
+  const pairAddress = String(pa.on_chain_pair_token_address || '').toLowerCase();
+  const pairToken = [...includedById.values()].find(item =>
+    extractAddress(item?.id) === pairAddress ||
+    extractAddress(item?.attributes?.address) === pairAddress
+  );
+
+  pairSymbol = normSymbol(pairToken?.attributes?.symbol || pairSymbol);
+}
 
 if (
   pa.on_chain_only &&

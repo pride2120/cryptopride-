@@ -24,7 +24,7 @@ const BASE_STOCK_TOKENS = [
   const POOL_CREATED_TOPIC =
   '0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118';
 
-async function rpc(method, params = [], rpcUrl = RH_RPC) {
+async function rpc(method, params = [], rpcUrl = RH_RPC, attempt = 0) {
   const response = await fetch(rpcUrl, {
     method: 'POST',
     headers: {
@@ -41,7 +41,14 @@ async function rpc(method, params = [], rpcUrl = RH_RPC) {
 
   if (!response.ok) {
   const detail = await response.text();
-  throw new Error(`Robinhood RPC HTTP ${response.status}: ${detail.slice(0, 500)}`);
+
+  if (response.status === 429 && attempt < 3) {
+    await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
+    return rpc(method, params, rpcUrl, attempt + 1);
+  }
+
+  const rpcName = rpcUrl === BASE_RPC ? 'Base' : 'Robinhood';
+  throw new Error(`${rpcName} RPC HTTP ${response.status}: ${detail.slice(0, 500)}`);
 }
 
   const json = await response.json();

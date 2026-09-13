@@ -809,6 +809,7 @@ if (
         poolCount: tagged.length,
         stockPoolCount,
         stockTokens: stockByAddress.size,
+robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,
         onChainStateCount,

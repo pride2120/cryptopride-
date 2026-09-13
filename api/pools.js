@@ -183,7 +183,7 @@ const decimalAdjustedRatio =
     type: 'pool',
     attributes: {
       address: discovered.pool,
-      name: `On-chain pool ${state.fee}`,
+      name: `${state.stockSymbol || 'Stock'} · ${state.chainLabel || 'CHAIN'} · ${(state.fee / 10000).toFixed(2)}%`,
       reserve_in_usd: '0',
       volume_usd: {
         m5: '0',
@@ -538,6 +538,8 @@ state.stockSide = stockByAddress.has(state.token0)
       : null;
 
 state.stockMultiplier = Number(stockAsset?.multiplier || 1);
+    state.stockSymbol = stockAsset?.symbol || '';
+state.chainLabel = isBase ? 'BASE' : 'ROBINHOOD';
 if (BigInt(state.liquidity || '0') > 0n) {
   onChainActiveLiquidityCount++;
 }

@@ -505,11 +505,17 @@ let onChainPricedRatioCount = 0;
     let onChainBaseStockCount = 0;
     let onChainActiveLiquidityCount = 0;
 let onChainQuoteStockCount = 0;
+    let onChainStateErrorCount = 0;
+let onChainStateLastError = '';
 for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(
   discovered.pool,
   isBase ? BASE_RPC : RH_RPC
-).catch(() => null);
+).catch(error => {
+  onChainStateErrorCount++;
+  onChainStateLastError = error?.message || String(error);
+  return null;
+});
 
   if (state?.token0 && state?.token1) {
     const [token0Decimals, token1Decimals] = await Promise.all([
@@ -813,6 +819,8 @@ robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,
         onChainStateCount,
+        onChainStateErrorCount,
+onChainStateLastError,
         onChainPricedRatioCount,
         onChainBaseStockCount,
 onChainQuoteStockCount,

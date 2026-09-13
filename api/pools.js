@@ -824,7 +824,7 @@ onChainQuoteStockCount,
     });
   } catch (error) {
     return res.status(502).json({
-      error: 'Robinhood pool fetch failed',
+      error: `${isBase ? 'Base' : 'Robinhood'} pool fetch failed`,
       detail: error && error.message ? error.message : String(error)
     });
   }

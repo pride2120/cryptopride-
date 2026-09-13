@@ -808,7 +808,7 @@ if (
         pagesScanned: pagesRequested,
         poolCount: tagged.length,
         stockPoolCount,
-        robinhoodStockTokens: stockByAddress.size,
+        stockTokens: stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,
         onChainStateCount,
@@ -818,7 +818,7 @@ onChainQuoteStockCount,
         onChainActiveLiquidityCount,
         onChainPoolsAdded,
         onChainDuplicateCount,
-        chainId: 4663
+        chainId: isBase ? BASE_CHAIN_ID : 4663
       }
     });
   } catch (error) {

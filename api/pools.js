@@ -855,6 +855,9 @@ if (
         poolCount: tagged.length,
         stockPoolCount,
         stockTokens: stockByAddress.size,
+        priorityStocksScanned: priorityStockAddresses
+  .map(address => stockByAddress.get(address)?.symbol)
+  .filter(Boolean),
 robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,

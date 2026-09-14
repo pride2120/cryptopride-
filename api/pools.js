@@ -858,6 +858,14 @@ if (
         priorityStocksScanned: priorityStockAddresses
   .map(address => stockByAddress.get(address)?.symbol)
   .filter(Boolean),
+        priorityPoolsFound: onChainBuiltPools
+  .filter(pool => ['DELL', 'AAPL', 'TSLA'].some(symbol =>
+    String(pool?.attributes?.name || '').toUpperCase().startsWith(symbol)
+  ))
+  .map(pool => ({
+    name: pool.attributes.name,
+    liquidity: pool.attributes.on_chain_liquidity
+  })),
 robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,

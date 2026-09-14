@@ -128,6 +128,17 @@ async function poolEthCall(poolAddress, selector, rpcUrl = RH_RPC) {
     data: selector
   }, 'latest'], rpcUrl);
 }
+async function fetchRecentPoolLogs(poolAddress, rpcUrl = RH_RPC) {
+  const latestHex = await rpc('eth_blockNumber', [], rpcUrl);
+  const latest = Number(BigInt(latestHex));
+  const fromBlock = Math.max(0, latest - 9);
+
+  return rpc('eth_getLogs', [{
+    address: poolAddress,
+    fromBlock: `0x${fromBlock.toString(16)}`,
+    toBlock: latestHex
+  }], rpcUrl);
+}
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([
     poolEthCall(poolAddress, '0x0dfe1681', rpcUrl),
@@ -574,6 +585,7 @@ let onChainPricedRatioCount = 0;
 let onChainQuoteStockCount = 0;
     let onChainStateErrorCount = 0;
 let onChainStateLastError = '';
+    const priorityRecentPoolLogs = [];
 for (const discovered of onChainStockPools) {
   const state = await readOnChainPoolState(
   discovered.pool,
@@ -583,7 +595,16 @@ for (const discovered of onChainStockPools) {
   onChainStateLastError = error?.message || String(error);
   return null;
 });
+const recentLogs = await fetchRecentPoolLogs(
+  discovered.pool,
+  isBase ? BASE_RPC : RH_RPC
+).catch(() => []);
 
+priorityRecentPoolLogs.push({
+  pool: discovered.pool,
+  fee: discovered.fee,
+  recentLogCount: recentLogs.length
+});
   if (state?.token0 && state?.token1) {
     const [token0Decimals, token1Decimals] = await Promise.all([
       readTokenDecimals(state.token0, isBase ? BASE_RPC : RH_RPC),

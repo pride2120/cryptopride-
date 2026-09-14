@@ -116,7 +116,7 @@ function aprModel(vol,liq,width,fitPct,rate=feeRate()){
     return{
       base:0,
       mult:1,
-      fitFactor:0,
+      fitFactor:clamp((fitPct==null?0:fitPct)/100,0,1),
       competition:1,
       rebalance:1,
       adjusted:0

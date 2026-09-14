@@ -714,9 +714,8 @@ if (pa.on_chain_only && !isStableSymbol(pairSymbol)) {
 if (
   pa.on_chain_only &&
   BigInt(pa.on_chain_liquidity || '0') > 0n &&
-  isStableSymbol(pairSymbol) &&
-  Number(pa.on_chain_stock_multiplier || 1) === 1
-) {
+  isStableSymbol(pairSymbol)
+  ) {
   focusPrice = goodPrice(pa.on_chain_stock_price_in_pair);
 }
       const rawChange = Number(pa.price_change_percentage?.h24 || 0);

@@ -794,12 +794,30 @@ if (
       const basePrice = goodPrice(a.debug_base_price_usd);
       const liq = Number(a.reserve_in_usd || 0);
       const address = extractAddress(pool.id) || extractAddress(a.address);
+      const focus = normSymbol(a.focus_token_symbol);
+const focusRef = historyReference.get(focus);
+
+if (
+  focus &&
+  !a.on_chain_only &&
+  address &&
+  goodPrice(a.focus_token_price_usd) > 1.5 &&
+  (!focusRef || liq > focusRef.liquidity)
+) {
+  historyReference.set(focus, {
+    address,
+    side: a.focus_token_side || 'base',
+    liquidity: liq,
+    price: goodPrice(a.focus_token_price_usd),
+    name: a.name || ''
+  });
+}
       if (!address || !base || isStableSymbol(base) || !isStableSymbol(quote) || basePrice <= 1.5 || String(pool?.relationships?.dex?.data?.id || '').includes('uniswap-v4')) continue;
       const prev = historyReference.get(base);
       if (!prev || liq > prev.liquidity) {
         historyReference.set(base, { address, side: 'base', liquidity: liq, price: basePrice, name: a.name || '' });
-      }
-    }
+        
+ 
 
     const tagged = preliminary.map(pool => {
       const a = pool.attributes || {};

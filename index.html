@@ -255,7 +255,25 @@ async function selectPool(id){
   try{
     $('dataStatus').textContent='Loading history';
     const a=attrs(selected),address=a.history_pool_address||poolAddress(selected);
-    if(a.on_chain_only&&!a.history_reference_symbol){candles=[];$('dataStatus').textContent='Live · on-chain price only';renderCalc();return;}
+    if(a.on_chain_only&&!a.history_reference_symbol){
+  const ownHistory=Array.isArray(a.on_chain_history)?a.on_chain_history:[];
+
+  candles=ownHistory
+    .map(s=>{
+      const t=Math.floor(num(s.time)/1000);
+      const p=num(s.price);
+      return [t,p,p,p,p,0];
+    })
+    .filter(c=>c[0]>0&&c[4]>0);
+
+  $('dataStatus').textContent=
+    candles.length
+      ? `Live · on-chain history · ${candles.length} samples`
+      : 'Live · building on-chain history';
+
+  renderCalc();
+  return;
+}
     if(!address)throw new Error('Pool address unavailable');
     const focusSymbol=poolFocusSymbol(selected);
 const baseSymbol=String(a.base_token_symbol||'').toUpperCase();

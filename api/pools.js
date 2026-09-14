@@ -781,17 +781,21 @@ if (
         }
       };
     });
-
+const recordedHistorySymbols = new Set();
 for (const pool of preliminary) {
   const a = pool.attributes || {};
 
-  if (
-    a.on_chain_only &&
-    a.focus_token_symbol &&
-    goodPrice(a.focus_token_price_usd) > 0
-  ) {
+  const historySymbol = normSymbol(a.focus_token_symbol);
+
+if (
+  a.on_chain_only &&
+  historySymbol &&
+  !recordedHistorySymbols.has(historySymbol) &&
+  goodPrice(a.focus_token_price_usd) > 0
+) {
+  recordedHistorySymbols.add(historySymbol);
     await recordOnChainPrice(
-      a.focus_token_symbol,
+      historySymbol,
       a.focus_token_price_usd
     ).catch(() => {});
   }

@@ -330,6 +330,22 @@ function deriveFocusPrice(pa, side) {
   if (baseUsd && baseInQuote) return baseUsd / baseInQuote;
   return 0;
 }
+const ONCHAIN_HISTORY = new Map();
+function recordOnChainPrice(symbol, price) {
+  symbol = normSymbol(symbol);
+  price = goodPrice(price);
+  if (!symbol || !price) return;
+
+  const now = Date.now();
+  const samples = ONCHAIN_HISTORY.get(symbol) || [];
+  samples.push({ time: now, price });
+
+  const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+  ONCHAIN_HISTORY.set(
+    symbol,
+    samples.filter(sample => sample.time >= sevenDaysAgo)
+  );
+}
 async function fetchTokenPools(tokenAddress, tokenPoolsBase = GT_TOKEN_POOLS) {
   const url = `${tokenPoolsBase}/${tokenAddress}/pools?include=base_token,quote_token,dex`;
   const r = await fetch(url, {

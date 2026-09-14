@@ -58,7 +58,33 @@ function widthTarget(){return {aggressive:72,sweet:86,conservative:94,setforget:
 function inferredTickSpacing(){const t=Math.abs(num(poolState?.tickSpacing));if(t)return t;const rate=feeRate();if(rate<=.0001)return 1;if(rate<=.0005)return 10;if(rate<=.003)return 60;if(rate<=.01)return 200;return 10}
 function tickWidthPct(spacing=inferredTickSpacing()){return Math.max(.01,(Math.pow(1.0001,Math.max(1,spacing))-1)*100)}
 function snapWidth(width){const min=tickWidthPct();const snapped=Math.round(Math.max(width,min)/min)*min;return clamp(snapped,min,300)}
-function fitAtWidth(width){const widths=rollingRequiredWidths();if(!widths.length)return null;return widths.filter(w=>w<=width).length/widths.length*100}
+function fitAtWidth(width){
+  const widths=rollingRequiredWidths();
+
+  if(widths.length){
+    return widths.filter(w=>w<=width).length/widths.length*100;
+  }
+
+  const cs=closes();
+
+  if(attrs(selected).on_chain_only && cs.length>=3){
+    const start=cs[0];
+    if(!(start>0))return null;
+
+    let maxAbs=0;
+
+    for(const v of cs){
+      if(!(v>0))continue;
+      maxAbs=Math.max(maxAbs,Math.abs(v/start-1));
+    }
+
+    const requiredWidth=maxAbs*200;
+
+    return requiredWidth<=width?100:0;
+  }
+
+  return null;
+}
 function pairKey(p){const a=attrs(p),sy=pairSymbols(a).filter(Boolean).map(x=>STABLES.has(x)?'USD':x).sort();return sy.join('|')}
 function competitionProxy(p=selected){if(!p)return{factor:1,score:50,peerCount:0};const key=pairKey(p),peers=pools.filter(x=>pairKey(x)===key);const eff=peers.map(x=>{const a=attrs(x),l=num(a.reserve_in_usd),v=num(a.volume_usd?.h24);return l>0?v/l:0}).filter(x=>x>0).sort((a,b)=>a-b);const a=attrs(p),self=num(a.reserve_in_usd)>0?num(a.volume_usd?.h24)/num(a.reserve_in_usd):0;if(!eff.length||!self)return{factor:1,score:50,peerCount:peers.length};const med=eff[Math.floor(eff.length/2)]||self;const ratio=clamp(self/Math.max(med,1e-9),.35,2.5);const factor=clamp(Math.sqrt(ratio),.65,1.5);return{factor,score:Math.round(clamp(50+Math.log(ratio)*22,10,90)),peerCount:peers.length}}
 function rebalancePenalty(fitPct,width){const delay=Math.max(0,num($('rebalanceDelay')?.value||0));const fit=clamp((fitPct??widthTarget())/100,.01,1);const out=1-fit;const delayDrag=out*Math.min(delay/24,.8);const churnDrag=out*clamp(8/Math.max(width,1),.05,.55);return clamp(1-delayDrag-churnDrag,.35,1)}

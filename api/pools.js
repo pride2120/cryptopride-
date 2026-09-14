@@ -816,10 +816,9 @@ if (
       const prev = historyReference.get(base);
       if (!prev || liq > prev.liquidity) {
         historyReference.set(base, { address, side: 'base', liquidity: liq, price: basePrice, name: a.name || '' });
-        
- 
-
-    const tagged = preliminary.map(pool => {
+            }
+  }
+     const tagged = preliminary.map(pool => {
       const a = pool.attributes || {};
       const focusSymbol = normSymbol(a.focus_token_symbol);
       let focusPrice = goodPrice(a.focus_token_price_usd);

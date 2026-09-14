@@ -843,7 +843,7 @@ if (
 
       const histRef = historyReference.get(focusSymbol) || null;
       const ownAddress = extractAddress(pool.id) || extractAddress(a.address);
-      const useHistoryReference = Boolean(isReversedStablePair && histRef && histRef.address !== ownAddress);
+      const useHistoryReference = Boolean(histRef && histRef.address !== ownAddress);
 
       return {
         ...pool,

@@ -782,7 +782,35 @@ if (
       };
     });
 
+for (const pool of preliminary) {
+  const a = pool.attributes || {};
 
+  if (
+    a.on_chain_only &&
+    a.focus_token_symbol &&
+    goodPrice(a.focus_token_price_usd) > 0
+  ) {
+    await recordOnChainPrice(
+      a.focus_token_symbol,
+      a.focus_token_price_usd
+    ).catch(() => {});
+  }
+}
+    const onChainHistoryBySymbol = new Map();
+
+for (const pool of preliminary) {
+  const a = pool.attributes || {};
+  const symbol = normSymbol(a.focus_token_symbol);
+
+  if (
+    a.on_chain_only &&
+    symbol &&
+    !onChainHistoryBySymbol.has(symbol)
+  ) {
+    const history = await getOnChainHistory(symbol).catch(() => []);
+    onChainHistoryBySymbol.set(symbol, history);
+  }
+}
     // Build a cross-pool USD reference-price map. GeckoTerminal sometimes returns
     // reversed stable/volatile pools (for example USDG / WETH) without a usable
     // quote-token USD price. Other pools for the same volatile token are usually
@@ -883,7 +911,7 @@ if (
       const histRef = historyReference.get(focusSymbol) || null;
       const ownAddress = extractAddress(pool.id) || extractAddress(a.address);
       const useHistoryReference = Boolean(histRef && histRef.address !== ownAddress);
-
+const ownHistory = onChainHistoryBySymbol.get(focusSymbol) || [];
       return {
         ...pool,
         attributes: {
@@ -895,6 +923,7 @@ if (
           history_pool_address: useHistoryReference ? histRef.address : ownAddress,
           history_token_side: useHistoryReference ? histRef.side : a.focus_token_side,
           history_reference_symbol: useHistoryReference ? focusSymbol : null,
+          on_chain_history: ownHistory,
           history_reference_name: useHistoryReference ? histRef.name : null
         }
       };

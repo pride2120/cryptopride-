@@ -1,3 +1,14 @@
 {
-  "rewrites": [{ "source": "/", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/pools?pages=20",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }

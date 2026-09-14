@@ -430,6 +430,13 @@ if (isBase) {
 
     const stockByAddress = new Map();
     const stockBySymbol = new Map();
+    const PRIORITY_STOCK_KEYS = new Set([
+  'TSLA',
+  'TESLA',
+  'AAPL',
+  'APPLE',
+  'DELL'
+]);
     for (const asset of assets) {
       if (asset.status && asset.status !== 'ASSET_STATUS_ACTIVE') continue;
       const stock = {
@@ -484,9 +491,23 @@ if (isBase) {
       if (quoteAddress) seenTokenAddresses.add(quoteAddress);
     }
 
-    const missingStockAddresses = [...stockByAddress.keys()]
-      .filter(address => !seenTokenAddresses.has(address))
-      .slice(0, 10);
+    const priorityStockAddresses = [...stockByAddress.entries()]
+  .filter(([address, stock]) =>
+    !seenTokenAddresses.has(address) &&
+    [...PRIORITY_STOCK_KEYS].some(key =>
+      normSymbol(stock?.symbol).startsWith(key) ||
+      normSymbol(stock?.name).includes(key)
+    )
+  )
+  .map(([address]) => address);
+
+const missingStockAddresses = [
+  ...priorityStockAddresses,
+  ...[...stockByAddress.keys()].filter(address =>
+    !seenTokenAddresses.has(address) &&
+    !priorityStockAddresses.includes(address)
+  )
+].slice(0, 10);
     const candidateTokenAddresses = [...new Set(
   [...includedById.values()]
     .filter(item => ['WETH', 'USDG', 'USDC'].includes(

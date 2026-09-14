@@ -978,7 +978,7 @@ const ownHistory = onChainHistoryBySymbol.get(focusSymbol) || [];
         priorityHistoryReferences: ['AAPL', 'DELL', 'TSLA'].map(symbol => ({
   symbol,
   reference: historyReference.get(symbol) || null
-})),
+})),priorityRecentPoolLogs,
 robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,

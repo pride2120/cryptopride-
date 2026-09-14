@@ -1,3 +1,5 @@
+const { Redis } = require('@upstash/redis');
+const redis = Redis.fromEnv();
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';
 const GT_TOKEN_POOLS = 'https://api.geckoterminal.com/api/v2/networks/robinhood/tokens';
@@ -330,21 +332,42 @@ function deriveFocusPrice(pa, side) {
   if (baseUsd && baseInQuote) return baseUsd / baseInQuote;
   return 0;
 }
-const ONCHAIN_HISTORY = new Map();
-function recordOnChainPrice(symbol, price) {
+async function recordOnChainPrice(symbol, price) {
   symbol = normSymbol(symbol);
   price = goodPrice(price);
   if (!symbol || !price) return;
 
   const now = Date.now();
-  const samples = ONCHAIN_HISTORY.get(symbol) || [];
-  samples.push({ time: now, price });
-
   const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-  ONCHAIN_HISTORY.set(
-    symbol,
-    samples.filter(sample => sample.time >= sevenDaysAgo)
-  );
+  const key = `onchain-history:${symbol}`;
+
+  await redis.zadd(key, {
+    score: now,
+    member: `${now}:${price}`
+  });
+
+  await redis.zremrangebyscore(key, 0, sevenDaysAgo);
+}
+async function getOnChainHistory(symbol) {
+  symbol = normSymbol(symbol);
+  if (!symbol) return [];
+
+  const key = `onchain-history:${symbol}`;
+  const members = await redis.zrange(key, 0, -1);
+
+  return members
+    .map(member => {
+      const [time, price] = String(member).split(':');
+      return {
+        time: Number(time),
+        price: Number(price)
+      };
+    })
+    .filter(sample =>
+      Number.isFinite(sample.time) &&
+      Number.isFinite(sample.price) &&
+      sample.price > 0
+    );
 }
 async function fetchTokenPools(tokenAddress, tokenPoolsBase = GT_TOKEN_POOLS) {
   const url = `${tokenPoolsBase}/${tokenAddress}/pools?include=base_token,quote_token,dex`;

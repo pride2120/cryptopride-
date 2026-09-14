@@ -305,7 +305,7 @@ $('savePosition').onclick=()=>{const p=pools.find(z=>z.id===$('positionPool').va
 function updateChallenge(){const v=num($('challengeValue').value),progress=clamp((v-100)/(10000-100)*100,0,100);$('challengeFill').style.width=`${progress}%`;$('challengePct').textContent=`${progress.toFixed(1)}%`;localStorage.setItem('lpr_challenge',v)}
 async function load(){try{
 const robinhood=await fetchJson('/api/pools?pages=20');
-const base=await fetchJson('/api/pools?pages=1&chain=base');
+const base=await fetchJson('/api/pools?pages=1&chain=base').catch(()=>({data:[]}));
 
 pools=[
   ...(robinhood.data||[]),

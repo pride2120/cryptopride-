@@ -882,6 +882,10 @@ if (
     name: pool.attributes.name,
     liquidity: pool.attributes.on_chain_liquidity
   })),
+        priorityHistoryReferences: ['AAPL', 'DELL', 'TSLA'].map(symbol => ({
+  symbol,
+  reference: historyReference.get(symbol) || null
+})),
 robinhoodStockTokens: isBase ? 0 : stockByAddress.size,
         extraPoolsDiscovered,
         onChainPoolCount,

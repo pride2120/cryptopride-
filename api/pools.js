@@ -131,13 +131,21 @@ async function poolEthCall(poolAddress, selector, rpcUrl = RH_RPC) {
 async function fetchRecentPoolLogs(poolAddress, rpcUrl = RH_RPC) {
   const latestHex = await rpc('eth_blockNumber', [], rpcUrl);
   const latest = Number(BigInt(latestHex));
-  const fromBlock = Math.max(0, latest - 9);
+  const logs = [];
 
-  return rpc('eth_getLogs', [{
-    address: poolAddress,
-    fromBlock: `0x${fromBlock.toString(16)}`,
-    toBlock: latestHex
-  }], rpcUrl);
+  for (let end = latest; end > latest - 50; end -= 10) {
+    const start = Math.max(0, end - 9);
+
+    const chunk = await rpc('eth_getLogs', [{
+      address: poolAddress,
+      fromBlock: `0x${start.toString(16)}`,
+      toBlock: `0x${end.toString(16)}`
+    }], rpcUrl).catch(() => []);
+
+    logs.push(...chunk);
+  }
+
+  return logs;
 }
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([

@@ -137,10 +137,13 @@ async function fetchRecentPoolLogs(poolAddress, rpcUrl = RH_RPC) {
     const start = Math.max(0, end - 9);
 
     const chunk = await rpc('eth_getLogs', [{
-      address: poolAddress,
-      fromBlock: `0x${start.toString(16)}`,
-      toBlock: `0x${end.toString(16)}`
-    }], rpcUrl).catch(() => []);
+  address: poolAddress,
+  fromBlock: `0x${start.toString(16)}`,
+  toBlock: `0x${end.toString(16)}`,
+  topics: [
+    '0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67'
+  ]
+}], rpcUrl).catch(() => []);
 
     logs.push(...chunk);
   }

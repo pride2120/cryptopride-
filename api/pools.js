@@ -484,7 +484,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 8), 1), 20);
+  const pagesRequested = Math.min(Math.max(Number(req.query?.pages || 5), 1), 5);
 const chain = String(req.query?.chain || 'robinhood').toLowerCase();
   const isBase = chain === 'base';
   try {

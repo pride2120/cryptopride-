@@ -555,9 +555,31 @@ let firstPageRetries = 0;
     continue;
   }
 
-  if (response.status === 429) {
-    break;
+ if (response.status === 429) {
+  const cachedPools = await redis.get(
+    `pool-cache:${isBase ? 'base' : 'robinhood'}`
+  ).catch(() => null);
+
+  if (page === 1 && Array.isArray(cachedPools) && cachedPools.length > 0) {
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+
+    return res.status(200).json({
+      data: cachedPools,
+      meta: {
+        version: '6.0',
+        pagesScanned: 0,
+        poolCount: cachedPools.length,
+        stockPoolCount: cachedPools.filter(
+          p => p?.attributes?.is_stock_pool
+        ).length,
+        cachedFallback: true,
+        chainId: isBase ? BASE_CHAIN_ID : 4663
+      }
+    });
   }
+
+  break;
+}
 
   if (page === 1) {
     throw new Error(`GeckoTerminal HTTP ${response.status}`);
@@ -1021,6 +1043,12 @@ const ownHistory = onChainHistoryBySymbol.get(focusSymbol) || [];
     });
 
     const stockPoolCount = tagged.filter(p => p.attributes?.is_stock_pool).length;
+    if (tagged.length > 0) {
+  await redis.set(
+    `pool-cache:${isBase ? 'base' : 'robinhood'}`,
+    tagged
+  ).catch(() => {});
+}
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
     return res.status(200).json({
       data: tagged,

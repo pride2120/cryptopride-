@@ -49,7 +49,9 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
     `&toBlock=${latestBlock}` +
     `&address=${poolAddress}` +
     `&topic0=${swapTopic}` +
-    `&apikey=${BLOCKSCOUT_API_KEY}`;
+`&sort=desc` +
+`&offset=1000` +
+`&apikey=${BLOCKSCOUT_API_KEY}`;
 
   const response = await fetch(url);
   const text = await response.text();

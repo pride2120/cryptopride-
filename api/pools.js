@@ -638,6 +638,11 @@ const missingStockAddresses = [
     )
     .filter(Boolean)
 )];
+    if (!isBase && candidateTokenAddresses.length === 0) {
+  candidateTokenAddresses.push(
+    '0x5fc5360d0400a0fd4f2af552add042d716f1d168'
+  );
+}
 const onChainStockPools = await fetchOnChainStockPools(
   missingStockAddresses,
   candidateTokenAddresses,

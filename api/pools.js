@@ -151,6 +151,21 @@ async function fetchRecentPoolLogs(poolAddress, rpcUrl = RH_RPC) {
 
   return logs;
 }
+async function fetchBlockscoutTransactions(poolAddress) {
+  if (!BLOCKSCOUT_API_KEY) return [];
+
+  const url =
+    `https://api.blockscout.com/4663/api/v2/addresses/${poolAddress}/transactions?apikey=${BLOCKSCOUT_API_KEY}`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Blockscout HTTP ${response.status}`);
+  }
+
+  const json = await response.json();
+  return Array.isArray(json?.items) ? json.items : [];
+}
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([
     poolEthCall(poolAddress, '0x0dfe1681', rpcUrl),

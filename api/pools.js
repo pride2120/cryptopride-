@@ -538,7 +538,7 @@ if (isBase) {
 
     const allPools = [];
     const includedById = new Map();
-
+let firstPageRetries = 0;
     for (let page = 1; page <= pagesRequested; page++) {
       const url = `${isBase ? BASE_GT_BASE : GT_BASE}?include=base_token,quote_token,dex&page=${page}`;
       const response = await fetch(url, {
@@ -548,8 +548,14 @@ if (isBase) {
         }
       });
      if (!response.ok) {
+  if (response.status === 429 && page === 1 && firstPageRetries < 3) {
+    firstPageRetries++;
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    page--;
+    continue;
+  }
+
   if (response.status === 429) {
-    await new Promise(resolve => setTimeout(resolve, 3000));
     break;
   }
 

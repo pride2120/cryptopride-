@@ -59,16 +59,38 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
     json = JSON.parse(text);
   } catch {}
 
-  return {
-    latestBlock,
-    fromBlock,
-    status: response.status,
-    ok: response.ok,
-    resultCount: Array.isArray(json?.result) ? json.result.length : 0,
-    sample: Array.isArray(json?.result) ? json.result.slice(0, 3) : [],
-    rawMessage: json?.message || null,
-    rawStatus: json?.status || null
-  };
+ const logs = Array.isArray(json?.result) ? json.result : [];
+
+const cutoff = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+
+const last24hLogs = logs.filter(log => {
+  const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);
+  return Number.isFinite(ts) && ts >= cutoff;
+});
+
+return {
+  latestBlock,
+  fromBlock,
+  status: response.status,
+  ok: response.ok,
+  resultCount: logs.length,
+  last24hSwapCount: last24hLogs.length,
+  oldestReturnedTimestamp: logs.length
+    ? logs.reduce((min, log) => {
+        const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);
+        return ts > 0 && ts < min ? ts : min;
+      }, Number.MAX_SAFE_INTEGER)
+    : null,
+  newestReturnedTimestamp: logs.length
+    ? logs.reduce((max, log) => {
+        const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);
+        return ts > max ? ts : max;
+      }, 0)
+    : null,
+  sample: last24hLogs.slice(0, 3),
+  rawMessage: json?.message || null,
+  rawStatus: json?.status || null
+};
 }
 
 module.exports = async function handler(req, res) {

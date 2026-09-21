@@ -164,7 +164,13 @@ async function fetchBlockscoutTransactions(poolAddress) {
   }
 
   const json = await response.json();
-  return Array.isArray(json?.items) ? json.items : [];
+const items = Array.isArray(json?.items) ? json.items : [];
+const cutoff = Date.now() - (24 * 60 * 60 * 1000);
+
+return items.filter(item => {
+  const time = new Date(item?.timestamp || 0).getTime();
+  return Number.isFinite(time) && time >= cutoff;
+});
 }
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([

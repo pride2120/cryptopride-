@@ -40,7 +40,7 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
   const latestHex = await rpc('eth_blockNumber');
   const latestBlock = Number(BigInt(latestHex));
 
-  const fromBlock = Math.max(0, latestBlock - 50000);
+  const fromBlock = Math.max(0, latestBlock - 900000);
 
  const allLogs = [];
 

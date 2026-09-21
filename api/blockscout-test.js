@@ -74,7 +74,16 @@ for (let page = 1; page <= 10; page++) {
   if (pageLogs.length < 1000) break;
 }
 
-const logs = allLogs;
+const uniqueLogs = [
+  ...new Map(
+    allLogs.map(log => [
+      `${log?.transactionHash || ''}:${log?.logIndex || ''}`,
+      log
+    ])
+  ).values()
+];
+
+const logs = uniqueLogs;
 
 const cutoff = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
 
@@ -89,6 +98,7 @@ return {
   status: 200,
 ok: true,
   resultCount: logs.length,
+  rawResultCount: allLogs.length,
   last24hSwapCount: last24hLogs.length,
   oldestReturnedTimestamp: logs.length
     ? logs.reduce((min, log) => {

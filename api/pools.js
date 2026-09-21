@@ -1,4 +1,5 @@
 const { Redis } = require('@upstash/redis');
+const BLOCKSCOUT_API_KEY = process.env.BLOCKSCOUT_API_KEY || '';
 const redis = Redis.fromEnv();
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/robinhood/pools';
 const RH_ASSETS = 'https://api.robinhood.com/rhj/assets';

@@ -725,6 +725,15 @@ priorityRecentPoolLogs[
       .filter(Boolean)
   )
 ];
+  const blockscoutSwapLogs = isBase
+  ? []
+  : await fetchBlockscoutSwapLogs(
+      discovered.pool
+    ).catch(() => []);
+
+priorityRecentPoolLogs[
+  priorityRecentPoolLogs.length - 1
+].blockscoutSwapLogCount = blockscoutSwapLogs.length;
   if (state?.token0 && state?.token1) {
     const [token0Decimals, token1Decimals] = await Promise.all([
       readTokenDecimals(state.token0, isBase ? BASE_RPC : RH_RPC),

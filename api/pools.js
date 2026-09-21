@@ -547,10 +547,18 @@ if (isBase) {
           'user-agent': 'CryptoPride-Range-Lab/6.0'
         }
       });
-      if (!response.ok) {
-        if (page === 1) throw new Error(`GeckoTerminal HTTP ${response.status}`);
-        break;
-      }
+     if (!response.ok) {
+  if (response.status === 429) {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    break;
+  }
+
+  if (page === 1) {
+    throw new Error(`GeckoTerminal HTTP ${response.status}`);
+  }
+
+  break;
+}
       const json = await response.json();
       const pagePools = Array.isArray(json.data) ? json.data : [];
       for (const item of json.included || []) includedById.set(item.id, item);

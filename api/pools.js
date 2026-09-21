@@ -1011,7 +1011,7 @@ for (const pool of preliminary) {
     // focus asset is WETH. We use this reference only for price history / fit, never for
     // the selected pool's volume, liquidity, or fee tier.
     const historyReference = new Map();
-    for (const pool of preliminary) {
+        for (const pool of preliminary) {
       const a = pool.attributes || {};
       const base = normSymbol(a.debug_base_symbol);
       const quote = normSymbol(a.debug_quote_symbol);
@@ -1111,6 +1111,7 @@ const ownHistory = onChainHistoryBySymbol.get(focusSymbol) || [];
   ))
   .map(pool => ({
     name: pool.attributes.name,
+    address: pool.attributes.address,
     liquidity: pool.attributes.on_chain_liquidity
   })),
         priorityHistoryReferences: ['AAPL', 'DELL', 'TSLA'].map(symbol => ({

@@ -661,6 +661,9 @@ state.stockSide = stockByAddress.has(state.token0)
 
 state.stockMultiplier = Number(stockAsset?.multiplier || 1);
     state.stockSymbol = stockAsset?.symbol || '';
+    priorityRecentPoolLogs[
+  priorityRecentPoolLogs.length - 1
+].symbol = state.stockSymbol || '';
 state.chainLabel = isBase ? 'BASE' : 'ROBINHOOD';
 if (BigInt(state.liquidity || '0') > 0n) {
   onChainActiveLiquidityCount++;

@@ -172,6 +172,36 @@ return items.filter(item => {
   return Number.isFinite(time) && time >= cutoff;
 });
 }
+async function fetchBlockscoutSwapLogs(poolAddress) {
+  if (!BLOCKSCOUT_API_KEY) return [];
+
+  const swapTopic =
+    '0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbc a67'.replace(' ', '');
+
+  const latestHex = await rpc('eth_blockNumber', [], RH_RPC);
+  const latestBlock = Number(BigInt(latestHex));
+
+  const fromBlock = Math.max(0, latestBlock - 900000);
+
+  const url =
+    `https://api.blockscout.com/v2/api?chain_id=4663` +
+    `&module=logs&action=getLogs` +
+    `&fromBlock=${fromBlock}` +
+    `&toBlock=${latestBlock}` +
+    `&address=${poolAddress}` +
+    `&topic0=${swapTopic}` +
+    `&apikey=${BLOCKSCOUT_API_KEY}`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Blockscout logs HTTP ${response.status}`);
+  }
+
+  const json = await response.json();
+
+  return Array.isArray(json?.result) ? json.result : [];
+}
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([
     poolEthCall(poolAddress, '0x0dfe1681', rpcUrl),

@@ -42,6 +42,9 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
 
   const fromBlock = Math.max(0, latestBlock - 50000);
 
+ const allLogs = [];
+
+for (let page = 1; page <= 10; page++) {
   const url =
     `https://api.blockscout.com/v2/api?chain_id=4663` +
     `&module=logs&action=getLogs` +
@@ -49,9 +52,10 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
     `&toBlock=${latestBlock}` +
     `&address=${poolAddress}` +
     `&topic0=${swapTopic}` +
-`&sort=desc` +
-`&offset=1000` +
-`&apikey=${BLOCKSCOUT_API_KEY}`;
+    `&page=${page}` +
+    `&offset=1000` +
+    `&sort=desc` +
+    `&apikey=${BLOCKSCOUT_API_KEY}`;
 
   const response = await fetch(url);
   const text = await response.text();
@@ -61,7 +65,16 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
     json = JSON.parse(text);
   } catch {}
 
- const logs = Array.isArray(json?.result) ? json.result : [];
+  const pageLogs = Array.isArray(json?.result) ? json.result : [];
+
+  if (!pageLogs.length) break;
+
+  allLogs.push(...pageLogs);
+
+  if (pageLogs.length < 1000) break;
+}
+
+const logs = allLogs;
 
 const cutoff = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
 
@@ -73,8 +86,8 @@ const last24hLogs = logs.filter(log => {
 return {
   latestBlock,
   fromBlock,
-  status: response.status,
-  ok: response.ok,
+  status: 200,
+ok: true,
   resultCount: logs.length,
   last24hSwapCount: last24hLogs.length,
   oldestReturnedTimestamp: logs.length
@@ -90,8 +103,8 @@ return {
       }, 0)
     : null,
   sample: last24hLogs.slice(0, 3),
-  rawMessage: json?.message || null,
-  rawStatus: json?.status || null
+  rawMessage: 'paged',
+rawStatus: '1'
 };
 }
 

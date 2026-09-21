@@ -28,7 +28,13 @@ async function rpc(method, params = []) {
 
   return json.result;
 }
+function decodeSigned256(hexWord) {
+  const value = BigInt(`0x${hexWord}`);
+  const max = 1n << 255n;
+  const full = 1n << 256n;
 
+  return value >= max ? value - full : value;
+}
 async function fetchBlockscoutSwapLogs(poolAddress) {
   if (!BLOCKSCOUT_API_KEY) {
     throw new Error('BLOCKSCOUT_API_KEY is missing');
@@ -91,7 +97,22 @@ const last24hLogs = logs.filter(log => {
   const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);
   return Number.isFinite(ts) && ts >= cutoff;
 });
+const decoded24h = last24hLogs.map(log => {
+  const data = String(log?.data || '').replace(/^0x/, '');
 
+  if (data.length < 128) {
+    return null;
+  }
+
+  const amount0 = decodeSigned256(data.slice(0, 64));
+  const amount1 = decodeSigned256(data.slice(64, 128));
+
+  return {
+    transactionHash: log?.transactionHash || '',
+    amount0: amount0.toString(),
+    amount1: amount1.toString()
+  };
+}).filter(Boolean);
 return {
   latestBlock,
   fromBlock,
@@ -100,6 +121,7 @@ ok: true,
   resultCount: logs.length,
   rawResultCount: allLogs.length,
   last24hSwapCount: last24hLogs.length,
+  decodedSwapCount: decoded24h.length,
   oldestReturnedTimestamp: logs.length
     ? logs.reduce((min, log) => {
         const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);
@@ -112,7 +134,7 @@ ok: true,
         return ts > max ? ts : max;
       }, 0)
     : null,
-  sample: last24hLogs.slice(0, 3),
+  sample: decoded24h.slice(0, 3),
   rawMessage: 'paged',
 rawStatus: '1'
 };

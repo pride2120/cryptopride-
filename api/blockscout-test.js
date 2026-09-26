@@ -35,11 +35,40 @@ function decodeSigned256(hexWord) {
 
   return value >= max ? value - full : value;
 }
+const tokenInfo = await readPoolTokenInfo(poolAddress);
+async function readPoolTokenInfo(poolAddress) {
+  const [token0Raw, token1Raw] = await Promise.all([
+    rpc('eth_call', [{ to: poolAddress, data: '0x0dfe1681' }, 'latest']),
+    rpc('eth_call', [{ to: poolAddress, data: '0xd21220a7' }, 'latest'])
+  ]);
+
+  const decodeAddress = raw => {
+    const clean = String(raw || '').replace(/^0x/, '');
+    return clean.length >= 64
+      ? `0x${clean.slice(-40)}`.toLowerCase()
+      : '';
+  };
+
+  const token0 = decodeAddress(token0Raw);
+  const token1 = decodeAddress(token1Raw);
+
+  const [decimals0Raw, decimals1Raw] = await Promise.all([
+    rpc('eth_call', [{ to: token0, data: '0x313ce567' }, 'latest']),
+    rpc('eth_call', [{ to: token1, data: '0x313ce567' }, 'latest'])
+  ]);
+
+  return {
+    token0,
+    token1,
+    token0Decimals: Number(BigInt(decimals0Raw || '0x0')),
+    token1Decimals: Number(BigInt(decimals1Raw || '0x0'))
+  };
+}
 async function fetchBlockscoutSwapLogs(poolAddress) {
   if (!BLOCKSCOUT_API_KEY) {
     throw new Error('BLOCKSCOUT_API_KEY is missing');
   }
-
+const tokenInfo = await readPoolTokenInfo(poolAddress);
   const swapTopic =
     '0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67';
 

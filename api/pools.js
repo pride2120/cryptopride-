@@ -108,7 +108,13 @@ function decodeAddressWord(value) {
   const address = `0x${clean.slice(-40)}`.toLowerCase();
   return /^0x0{40}$/.test(address) ? '' : address;
 }
+function decodeSigned256(hexWord) {
+  const value = BigInt(`0x${hexWord}`);
+  const max = 1n << 255n;
+  const full = 1n << 256n;
 
+  return value >= max ? value - full : value;
+}
 async function factoryGetPool(tokenA, tokenB, fee, factoryAddress = UNISWAP_V3_FACTORY, rpcUrl = RH_RPC) {
   const data =
     '0x1698ee82' +

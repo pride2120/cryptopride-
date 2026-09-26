@@ -688,12 +688,7 @@ const missingStockAddresses = [
     '0x5fc5360d0400a0fd4f2af552add042d716f1d168'
   );
 }
-const onChainStockPools = await fetchOnChainStockPools(
-  missingStockAddresses,
-  candidateTokenAddresses,
-  isBase ? BASE_UNISWAP_V3_FACTORY : UNISWAP_V3_FACTORY,
-  isBase ? BASE_RPC : RH_RPC
-);
+const onChainStockPools = [];
     
     const onChainPoolCount = onChainStockPools.length;
 let onChainStateCount = 0;

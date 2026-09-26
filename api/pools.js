@@ -749,6 +749,7 @@ priorityRecentPoolLogs[
 priorityRecentPoolLogs[
   priorityRecentPoolLogs.length - 1
 ].blockscoutSwapLogCount = blockscoutSwapLogs.length;
+  let blockscoutVolume24hUsd = 0;
   if (state?.token0 && state?.token1) {
     const [token0Decimals, token1Decimals] = await Promise.all([
       readTokenDecimals(state.token0, isBase ? BASE_RPC : RH_RPC),
@@ -757,6 +758,39 @@ readTokenDecimals(state.token1, isBase ? BASE_RPC : RH_RPC)
 
     state.token0Decimals = token0Decimals;
     state.token1Decimals = token1Decimals;
+    for (const log of blockscoutSwapLogs) {
+  const data = String(log?.data || '').replace(/^0x/, '');
+
+  if (data.length < 128) continue;
+
+  const amount0 = decodeSigned256(data.slice(0, 64));
+  const amount1 = decodeSigned256(data.slice(64, 128));
+
+  const token0Amount =
+    Math.abs(Number(amount0)) / (10 ** token0Decimals);
+
+  const token1Amount =
+    Math.abs(Number(amount1)) / (10 ** token1Decimals);
+
+ const token0Symbol = [...includedById.values()].find(item =>
+  extractAddress(item?.id) === state.token0.toLowerCase() ||
+  extractAddress(item?.attributes?.address) === state.token0.toLowerCase()
+)?.attributes?.symbol || '';
+
+const token1Symbol = [...includedById.values()].find(item =>
+  extractAddress(item?.id) === state.token1.toLowerCase() ||
+  extractAddress(item?.attributes?.address) === state.token1.toLowerCase()
+)?.attributes?.symbol || '';
+
+const token0IsStable = isStableSymbol(token0Symbol);
+const token1IsStable = isStableSymbol(token1Symbol);
+
+  if (token0IsStable) {
+    blockscoutVolume24hUsd += token0Amount;
+  } else if (token1IsStable) {
+    blockscoutVolume24hUsd += token1Amount;
+  }
+}
 state.stockSide = stockByAddress.has(state.token0)
   ? 'base'
   : stockByAddress.has(state.token1)

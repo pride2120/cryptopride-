@@ -205,8 +205,17 @@ async function fetchBlockscoutSwapLogs(poolAddress) {
   }
 
   const json = await response.json();
+const logs = Array.isArray(json?.result) ? json.result : [];
+const cutoff = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
 
-  return Array.isArray(json?.result) ? json.result : [];
+return logs.filter(log => {
+  const ts = Number.parseInt(
+    String(log?.timeStamp || '0').replace(/^0x/, ''),
+    16
+  );
+
+  return Number.isFinite(ts) && ts >= cutoff;
+});
 }
 async function readOnChainPoolState(poolAddress, rpcUrl = RH_RPC) {
   const [token0Raw, token1Raw, feeRaw, liquidityRaw, slot0Raw] = await Promise.all([

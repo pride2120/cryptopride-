@@ -724,9 +724,7 @@ priorityRecentPoolLogs.push({
   fee: discovered.fee,
   recentLogCount: recentLogs.length
 });
-  const blockscoutTransactions = await fetchBlockscoutTransactions(
-  discovered.pool
-).catch(() => []);
+  const blockscoutTransactions = [];
 
 priorityRecentPoolLogs[
   priorityRecentPoolLogs.length - 1

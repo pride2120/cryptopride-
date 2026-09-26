@@ -35,7 +35,7 @@ function decodeSigned256(hexWord) {
 
   return value >= max ? value - full : value;
 }
-const tokenInfo = await readPoolTokenInfo(poolAddress);
+
 async function readPoolTokenInfo(poolAddress) {
   const [token0Raw, token1Raw] = await Promise.all([
     rpc('eth_call', [{ to: poolAddress, data: '0x0dfe1681' }, 'latest']),
@@ -145,6 +145,10 @@ const decoded24h = last24hLogs.map(log => {
 return {
   latestBlock,
   fromBlock,
+  token0: tokenInfo.token0,
+token1: tokenInfo.token1,
+token0Decimals: tokenInfo.token0Decimals,
+token1Decimals: tokenInfo.token1Decimals,
   status: 200,
 ok: true,
   resultCount: logs.length,

@@ -289,7 +289,7 @@ const decimalAdjustedRatio =
         m30: '0',
         h1: '0',
         h6: '0',
-        h24: '0'
+        h24: String(state.volume24hUsd || 0)
       },
       price_change_percentage: {
         m5: '0',
@@ -803,8 +803,10 @@ state.stockSide = stockByAddress.has(state.token0)
       ? stockByAddress.get(state.token1)
       : null;
 
-state.stockMultiplier = Number(stockAsset?.multiplier || 1);
-    state.stockSymbol = stockAsset?.symbol || '';
+
+    state.stockMultiplier = Number(stockAsset?.multiplier || 1);
+state.stockSymbol = stockAsset?.symbol || '';
+state.volume24hUsd = blockscoutVolume24hUsd;
     priorityRecentPoolLogs[
   priorityRecentPoolLogs.length - 1
 ].symbol = state.stockSymbol || '';

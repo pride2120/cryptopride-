@@ -740,11 +740,7 @@ priorityRecentPoolLogs[
       .filter(Boolean)
   )
 ];
-  const blockscoutSwapLogs = isBase
-  ? []
-  : await fetchBlockscoutSwapLogs(
-      discovered.pool
-    ).catch(() => []);
+ const blockscoutSwapLogs = [];
 
 priorityRecentPoolLogs[
   priorityRecentPoolLogs.length - 1

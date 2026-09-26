@@ -348,7 +348,10 @@ window.removePosition=i=>{const list=saved();list.splice(i,1);localStorage.setIt
 $('savePosition').onclick=()=>{const p=pools.find(z=>z.id===$('positionPool').value);const lower=num($('posLower').value),upper=num($('posUpper').value);if(!p||!lower||!upper||lower>=upper)return alert('Enter a valid lower and upper range.');const list=saved();list.unshift({poolId:p.id,name:attrs(p).display_name||attrs(p).name,lower,upper,capital:num($('posCapital').value)});localStorage.setItem('lpr_positions',JSON.stringify(list.slice(0,12)));renderPositions()}
 function updateChallenge(){const v=num($('challengeValue').value),progress=clamp((v-100)/(10000-100)*100,0,100);$('challengeFill').style.width=`${progress}%`;$('challengePct').textContent=`${progress.toFixed(1)}%`;localStorage.setItem('lpr_challenge',v)}
 async function load(){try{
-const robinhood=await fetchJson('/api/pools?pages=5');
+const robinhood=await fetchJson('/api/pools?pages=5').catch(async()=>{
+  await new Promise(r=>setTimeout(r,3000));
+  return fetchJson('/api/pools?pages=5');
+});
 const base={data:[]};
 pools=[
   ...(robinhood.data||[]),

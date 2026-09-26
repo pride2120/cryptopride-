@@ -142,6 +142,10 @@ const decoded24h = last24hLogs.map(log => {
     amount1: amount1.toString()
   };
 }).filter(Boolean);
+  const volume24hUsd = decoded24h.reduce((sum, swap) => {
+  const amount0 = Math.abs(Number(swap.amount0)) / (10 ** tokenInfo.token0Decimals);
+  return sum + amount0;
+}, 0);
 return {
   latestBlock,
   fromBlock,
@@ -155,6 +159,7 @@ ok: true,
   rawResultCount: allLogs.length,
   last24hSwapCount: last24hLogs.length,
   decodedSwapCount: decoded24h.length,
+  volume24hUsd,
   oldestReturnedTimestamp: logs.length
     ? logs.reduce((min, log) => {
         const ts = Number.parseInt(String(log?.timeStamp || '0').replace(/^0x/, ''), 16);

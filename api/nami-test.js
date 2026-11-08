@@ -48,13 +48,19 @@ const liquidityRaw = await Promise.race([
     setTimeout(() => resolve('RPC_TIMEOUT'), 5000)
   )
 ]);
-    return res.status(200).json({
-      pool: POOL,
-      chain: 'ethereum',
-      token0: decodeAddress(token0Raw),
-      token1: decodeAddress(token1Raw),
-      liquidityRaw,
-      globalStateRaw
+    const globalStateRaw = await rpc('eth_call', [
+  { to: POOL, data: '0xe76c01e4' },
+  'latest'
+]);
+
+return res.status(200).json({
+  pool: POOL,
+  chain: 'ethereum',
+  token0: decodeAddress(token0Raw),
+  token1: decodeAddress(token1Raw),
+  liquidityRaw,
+  globalStateRaw
+});
                 });
     const globalStateRaw = await rpc('eth_call', [
   { to: POOL, data: '0xe76c01e4' },

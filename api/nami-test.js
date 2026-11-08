@@ -61,11 +61,7 @@ return res.status(200).json({
   liquidityRaw,
   globalStateRaw
 });
-                });
-    const globalStateRaw = await rpc('eth_call', [
-  { to: POOL, data: '0xe76c01e4' },
-  'latest'
-]);
+    
   } catch (error) {
     return res.status(500).json({
       error: error.message

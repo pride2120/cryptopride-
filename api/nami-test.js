@@ -27,7 +27,16 @@ function decodeAddress(result) {
   if (!result || result === '0x') return null;
   return `0x${result.slice(-40)}`;
 }
+function splitWords(hex) {
+  const clean = String(hex || '').replace(/^0x/, '');
+  const words = [];
 
+  for (let i = 0; i < clean.length; i += 64) {
+    words.push(`0x${clean.slice(i, i + 64)}`);
+  }
+
+  return words;
+}
 module.exports = async function handler(req, res) {
   try {
     const token0Raw = await rpc('eth_call', [
@@ -60,6 +69,8 @@ return res.status(200).json({
   token1: decodeAddress(token1Raw),
   liquidityRaw,
   globalStateRaw
+  globalStateRaw,
+globalStateWords: splitWords(globalStateRaw)
 });
     
   } catch (error) {

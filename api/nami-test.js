@@ -39,12 +39,16 @@ module.exports = async function handler(req, res) {
       { to: POOL, data: '0xd21220a7' },
       'latest'
     ]);
-
+const liquidityRaw = await rpc('eth_call', [
+  { to: POOL, data: '0x1a686502' },
+  'latest'
+]);
     return res.status(200).json({
       pool: POOL,
       chain: 'ethereum',
       token0: decodeAddress(token0Raw),
       token1: decodeAddress(token1Raw)
+      liquidityRaw
           });
   } catch (error) {
     return res.status(500).json({

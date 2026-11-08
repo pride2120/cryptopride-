@@ -39,9 +39,14 @@ module.exports = async function handler(req, res) {
       { to: POOL, data: '0xd21220a7' },
       'latest'
     ]);
-const liquidityRaw = await rpc('eth_call', [
-  { to: POOL, data: '0x1a686502' },
-  'latest'
+const liquidityRaw = await Promise.race([
+  rpc('eth_call', [
+    { to: POOL, data: '0x1a686502' },
+    'latest'
+  ]),
+  new Promise(resolve =>
+    setTimeout(() => resolve('RPC_TIMEOUT'), 5000)
+  )
 ]);
     return res.status(200).json({
       pool: POOL,

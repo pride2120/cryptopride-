@@ -53,7 +53,7 @@ const liquidityRaw = await Promise.race([
       chain: 'ethereum',
       token0: decodeAddress(token0Raw),
       token1: decodeAddress(token1Raw),
-      liquidityRaw
+      liquidityRaw,
       globalStateRaw
                 });
     const globalStateRaw = await rpc('eth_call', [

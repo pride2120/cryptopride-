@@ -52,7 +52,7 @@ const liquidityRaw = await Promise.race([
       pool: POOL,
       chain: 'ethereum',
       token0: decodeAddress(token0Raw),
-      token1: decodeAddress(token1Raw)
+      token1: decodeAddress(token1Raw),
       liquidityRaw
           });
   } catch (error) {
